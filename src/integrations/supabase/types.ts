@@ -721,6 +721,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_pgp_keys: {
+        Row: {
+          created_at: string
+          fingerprint: string
+          id: string
+          key_id: string | null
+          public_key: string
+          updated_at: string
+          user_id: string
+          verified: boolean
+        }
+        Insert: {
+          created_at?: string
+          fingerprint: string
+          id?: string
+          key_id?: string | null
+          public_key: string
+          updated_at?: string
+          user_id: string
+          verified?: boolean
+        }
+        Update: {
+          created_at?: string
+          fingerprint?: string
+          id?: string
+          key_id?: string | null
+          public_key?: string
+          updated_at?: string
+          user_id?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

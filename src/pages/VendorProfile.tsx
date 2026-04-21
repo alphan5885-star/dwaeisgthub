@@ -5,6 +5,7 @@ import { useParams } from "@/lib/router-shim";
 import { Star, User, Package, Shield, Clock, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import VendorRating from "@/components/VendorRating";
+import PgpBadge from "@/components/PgpBadge";
 
 interface VendorProfileData {
   display_name: string | null;
@@ -140,11 +141,12 @@ export default function VendorProfile() {
               <h1 className="text-lg font-mono font-bold text-foreground">
                 {profile.display_name || "Anonim Satıcı"}
               </h1>
-              <div className="flex items-center gap-3 mt-1">
+              <div className="flex items-center gap-3 mt-1 flex-wrap">
                 <VendorRating vendorId={vendorId} size="md" />
                 <span className="text-[10px] font-mono text-muted-foreground px-2 py-0.5 rounded bg-primary/10 text-primary">
                   SATICI
                 </span>
+                <PgpBadge userId={vendorId} size="md" showFingerprint />
               </div>
               {profile.bio && (
                 <p className="text-xs text-muted-foreground font-mono mt-2">{profile.bio}</p>
