@@ -17,6 +17,7 @@ export type Database = {
       admin_auto_withdraw: {
         Row: {
           admin_id: string
+          available: number | null
           cold_wallet: string | null
           created_at: string
           enabled: boolean | null
@@ -25,6 +26,7 @@ export type Database = {
         }
         Insert: {
           admin_id: string
+          available?: number | null
           cold_wallet?: string | null
           created_at?: string
           enabled?: boolean | null
@@ -33,11 +35,63 @@ export type Database = {
         }
         Update: {
           admin_id?: string
+          available?: number | null
           cold_wallet?: string | null
           created_at?: string
           enabled?: boolean | null
           id?: string
           threshold?: number | null
+        }
+        Relationships: []
+      }
+      anti_phishing_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      chat_room_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_system: boolean
+          room_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          room_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          room_id?: string
+          sender_id?: string
         }
         Relationships: []
       }
@@ -315,6 +369,24 @@ export type Database = {
         }
         Relationships: []
       }
+      order_chat_rooms: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           amount: number
@@ -323,7 +395,9 @@ export type Database = {
           delivery_method: string | null
           id: string
           notes: string | null
+          payment_status: string | null
           product_id: string | null
+          service_fee: number | null
           shipping_address: string | null
           status: string | null
           updated_at: string
@@ -336,7 +410,9 @@ export type Database = {
           delivery_method?: string | null
           id?: string
           notes?: string | null
+          payment_status?: string | null
           product_id?: string | null
+          service_fee?: number | null
           shipping_address?: string | null
           status?: string | null
           updated_at?: string
@@ -349,7 +425,9 @@ export type Database = {
           delivery_method?: string | null
           id?: string
           notes?: string | null
+          payment_status?: string | null
           product_id?: string | null
+          service_fee?: number | null
           shipping_address?: string | null
           status?: string | null
           updated_at?: string
@@ -368,42 +446,96 @@ export type Database = {
       products: {
         Row: {
           category: string | null
+          commission_rate: number | null
           created_at: string
+          delivery_data: string | null
           description: string | null
+          destination: string | null
           id: string
+          image_emoji: string | null
           image_url: string | null
           is_active: boolean | null
+          name: string | null
+          origin: string | null
           price: number
           stock: number | null
           title: string
+          tracking_number: string | null
+          type: string | null
           updated_at: string
           vendor_id: string
         }
         Insert: {
           category?: string | null
+          commission_rate?: number | null
           created_at?: string
+          delivery_data?: string | null
           description?: string | null
+          destination?: string | null
           id?: string
+          image_emoji?: string | null
           image_url?: string | null
           is_active?: boolean | null
+          name?: string | null
+          origin?: string | null
           price?: number
           stock?: number | null
           title: string
+          tracking_number?: string | null
+          type?: string | null
           updated_at?: string
           vendor_id: string
         }
         Update: {
           category?: string | null
+          commission_rate?: number | null
           created_at?: string
+          delivery_data?: string | null
           description?: string | null
+          destination?: string | null
           id?: string
+          image_emoji?: string | null
           image_url?: string | null
           is_active?: boolean | null
+          name?: string | null
+          origin?: string | null
           price?: number
           stock?: number | null
           title?: string
+          tracking_number?: string | null
+          type?: string | null
           updated_at?: string
           vendor_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -471,6 +603,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          reference: string | null
+          status: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          reference?: string | null
+          status?: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          reference?: string | null
+          status?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_balances: {
+        Row: {
+          available: number
+          id: string
+          pending: number
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          available?: number
+          id?: string
+          pending?: number
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          available?: number
+          id?: string
+          pending?: number
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -555,12 +750,43 @@ export type Database = {
           },
         ]
       }
+      vendor_wallets: {
+        Row: {
+          available: number
+          commission: number
+          id: string
+          pending: number
+          total: number
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          available?: number
+          commission?: number
+          id?: string
+          pending?: number
+          total?: number
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          available?: number
+          commission?: number
+          id?: string
+          pending?: number
+          total?: number
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       assign_role_on_signup: { Args: { _role: string }; Returns: undefined }
+      confirm_delivery: { Args: { _order_id: string }; Returns: undefined }
       create_admin_user: { Args: never; Returns: undefined }
       get_user_role: { Args: { _user_id: string }; Returns: string }
       get_vendor_rating: {
