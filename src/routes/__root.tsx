@@ -12,6 +12,8 @@ import { I18nProvider } from "@/lib/i18n";
 import { SessionTimerProvider } from "@/lib/sessionTimerContext";
 import BackgroundMusic from "@/components/BackgroundMusic";
 
+import NotFound from "@/pages/NotFound";
+
 export const Route = createRootRoute({
   head: () => ({
     meta: [
@@ -24,6 +26,7 @@ export const Route = createRootRoute({
   }),
   shellComponent: RootShell,
   component: RootComponent,
+  notFoundComponent: NotFound,
 });
 
 function RootShell({ children }: { children: ReactNode }) {
