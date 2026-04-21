@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import PageShell from "@/components/PageShell";
 import { supabase } from "@/integrations/supabase/client";
-import { useParams } from "react-router-dom";
+import { useParams } from "@/lib/router-shim";
 import { Star, User, Package, Shield, Clock, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import VendorRating from "@/components/VendorRating";

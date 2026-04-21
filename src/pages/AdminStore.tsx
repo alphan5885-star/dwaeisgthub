@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import PageShell from "@/components/PageShell";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-shim";
 import {
   Package, Key, Search, Trash2, Edit2, Eye, EyeOff, ShoppingCart,
   Users, TrendingUp, Clock, CheckCircle, XCircle, AlertTriangle,
