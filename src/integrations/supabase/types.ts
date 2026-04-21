@@ -397,6 +397,7 @@ export type Database = {
           notes: string | null
           payment_status: string | null
           product_id: string | null
+          service_fee: number | null
           shipping_address: string | null
           status: string | null
           updated_at: string
@@ -411,6 +412,7 @@ export type Database = {
           notes?: string | null
           payment_status?: string | null
           product_id?: string | null
+          service_fee?: number | null
           shipping_address?: string | null
           status?: string | null
           updated_at?: string
@@ -425,6 +427,7 @@ export type Database = {
           notes?: string | null
           payment_status?: string | null
           product_id?: string | null
+          service_fee?: number | null
           shipping_address?: string | null
           status?: string | null
           updated_at?: string
@@ -444,42 +447,60 @@ export type Database = {
         Row: {
           category: string | null
           created_at: string
+          delivery_data: string | null
           description: string | null
+          destination: string | null
           id: string
+          image_emoji: string | null
           image_url: string | null
           is_active: boolean | null
           name: string | null
+          origin: string | null
           price: number
           stock: number | null
           title: string
+          tracking_number: string | null
+          type: string | null
           updated_at: string
           vendor_id: string
         }
         Insert: {
           category?: string | null
           created_at?: string
+          delivery_data?: string | null
           description?: string | null
+          destination?: string | null
           id?: string
+          image_emoji?: string | null
           image_url?: string | null
           is_active?: boolean | null
           name?: string | null
+          origin?: string | null
           price?: number
           stock?: number | null
           title: string
+          tracking_number?: string | null
+          type?: string | null
           updated_at?: string
           vendor_id: string
         }
         Update: {
           category?: string | null
           created_at?: string
+          delivery_data?: string | null
           description?: string | null
+          destination?: string | null
           id?: string
+          image_emoji?: string | null
           image_url?: string | null
           is_active?: boolean | null
           name?: string | null
+          origin?: string | null
           price?: number
           stock?: number | null
           title?: string
+          tracking_number?: string | null
+          type?: string | null
           updated_at?: string
           vendor_id?: string
         }
@@ -585,6 +606,7 @@ export type Database = {
           amount: number
           created_at: string
           currency: string
+          description: string | null
           id: string
           reference: string | null
           status: string
@@ -595,6 +617,7 @@ export type Database = {
           amount?: number
           created_at?: string
           currency?: string
+          description?: string | null
           id?: string
           reference?: string | null
           status?: string
@@ -605,6 +628,7 @@ export type Database = {
           amount?: number
           created_at?: string
           currency?: string
+          description?: string | null
           id?: string
           reference?: string | null
           status?: string
@@ -722,6 +746,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      vendor_wallets: {
+        Row: {
+          available: number
+          commission: number
+          id: string
+          pending: number
+          total: number
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          available?: number
+          commission?: number
+          id?: string
+          pending?: number
+          total?: number
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          available?: number
+          commission?: number
+          id?: string
+          pending?: number
+          total?: number
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
