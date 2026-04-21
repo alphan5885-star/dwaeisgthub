@@ -30,7 +30,8 @@ export default function Login() {
   const [mfaCode, setMfaCode] = useState("");
   const [captchaOk, setCaptchaOk] = useState(false);
   const [sessionMin, setSessionMin] = useState<number>(() => {
-    const v = localStorage.getItem("session_duration_min");
+    if (typeof window === "undefined") return 60;
+    const v = window.localStorage.getItem("session_duration_min");
     return v ? Number(v) : 60;
   });
   const { login, signup, mfaChallenge, verifyMfa } = useAuth();
