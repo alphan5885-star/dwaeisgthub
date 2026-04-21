@@ -6,6 +6,8 @@ import { Camera, Save, User, Package, CheckCircle, Clock, Loader2, ImagePlus } f
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import PanicButton from "@/components/PanicButton";
+import PgpVault from "@/components/PgpVault";
+import PgpBadge from "@/components/PgpBadge";
 
 interface ProfileData {
   display_name: string | null;
@@ -206,9 +208,10 @@ export default function Profile() {
                   placeholder="Kendinizi tanıtın..."
                 />
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <span className="text-[10px] font-mono px-2 py-1 rounded bg-primary/10 text-primary uppercase">{role}</span>
                 <span className="text-[10px] font-mono text-muted-foreground">{user?.email}</span>
+                {user?.id && <PgpBadge userId={user.id} size="sm" />}
               </div>
               <button onClick={handleSave} disabled={saving} className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground text-xs font-mono rounded neon-glow-btn">
                 {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
@@ -224,6 +227,9 @@ export default function Profile() {
             💡 Profil fotoğrafı ve banner için <span className="text-primary">GIF, PNG, JPG, WebP</span> formatları desteklenir. Hareketli GIF'ler otomatik olarak oynatılır!
           </span>
         </div>
+
+        {/* PGP Vault */}
+        <PgpVault />
 
         {/* Panic Mode */}
         <PanicButton />
