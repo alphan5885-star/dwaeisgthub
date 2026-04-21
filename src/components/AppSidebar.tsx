@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/authContext";
 import { useCustomization } from "@/lib/customizationContext";
 import { useI18n } from "@/lib/i18n";
 import { useNavigate, useLocation } from "@/lib/router-shim";
-import { Shield, LayoutDashboard, ShoppingCart, Store, Wallet, FileWarning, ScrollText, LogOut, ArrowRightLeft, User, Package, Lock, Coins, MessageSquare, Palette, ShoppingBag, Bot } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Shield, LayoutDashboard, ShoppingCart, Store, Wallet, FileWarning, ScrollText, LogOut, ArrowRightLeft, User, Package, Lock, Coins, MessageSquare, Palette, ShoppingBag, Bot, Heart, Search, Activity } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
 
 type LinkDef = { to: string; labelKey: string; icon: any };
@@ -26,6 +28,7 @@ const adminLinks: LinkDef[] = [
 const vendorLinks: LinkDef[] = [
   { to: "/vendor", labelKey: "myProducts", icon: Store },
   { to: "/market", labelKey: "market", icon: ShoppingCart },
+  { to: "/watchlist", labelKey: "watchlist", icon: Heart },
   { to: "/orders", labelKey: "myOrders", icon: Package },
   { to: "/wallet", labelKey: "wallet", icon: Coins },
   { to: "/vendor/wallet", labelKey: "wallet", icon: Wallet },
@@ -39,6 +42,7 @@ const vendorLinks: LinkDef[] = [
 
 const buyerLinks: LinkDef[] = [
   { to: "/market", labelKey: "market", icon: ShoppingCart },
+  { to: "/watchlist", labelKey: "watchlist", icon: Heart },
   { to: "/orders", labelKey: "myOrders", icon: Package },
   { to: "/wallet", labelKey: "wallet", icon: Coins },
   { to: "/transactions", labelKey: "transactions", icon: ArrowRightLeft },
@@ -54,12 +58,27 @@ export default function AppSidebar() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
+  const [activity, setActivity] = useState<{ id: string; title: string; created_at: string; link?: string | null }[]>([]);
+  const [stats, setStats] = useState<{ orders: number; favs: number }>({ orders: 0, favs: 0 });
 
   const links = role === "admin" ? adminLinks : role === "vendor" ? vendorLinks : buyerLinks;
   const collapsed = settings.sidebarCollapsed;
   const isRight = settings.sidebarPosition === "right";
-  const width = collapsed ? "w-16" : "w-56";
+  const width = collapsed ? "w-16" : "w-60";
   const posClass = isRight ? "right-0" : "left-0";
+
+  useEffect(() => {
+    if (!user || collapsed) return;
+    (async () => {
+      const [{ data: notifs }, { count: orderCount }, { count: favCount }] = await Promise.all([
+        supabase.from("notifications").select("id, title, created_at, link").eq("user_id", user.id).order("created_at", { ascending: false }).limit(3),
+        supabase.from("orders").select("id", { count: "exact", head: true }).eq("buyer_id", user.id),
+        (supabase as any).from("watchlist").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      ]);
+      setActivity((notifs as any) || []);
+      setStats({ orders: orderCount || 0, favs: favCount || 0 });
+    })();
+  }, [user, collapsed, location.pathname]);
 
   return (
     <aside className={`fixed ${posClass} top-0 h-screen ${width} bg-card border-${isRight ? "l" : "r"} border-border flex flex-col z-50 transition-all duration-300`}>
@@ -73,6 +92,20 @@ export default function AppSidebar() {
       </div>
 
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent("palette:toggle"))}
+          title={collapsed ? "Hızlı ara (⌘K)" : undefined}
+          className={`w-full mb-2 flex items-center gap-2 px-3 py-2 rounded text-sm bg-secondary/40 hover:bg-secondary text-muted-foreground hover:text-foreground transition-all border border-border ${collapsed ? "justify-center" : ""}`}
+        >
+          <Search className="w-4 h-4 shrink-0" />
+          {!collapsed && (
+            <>
+              <span className="flex-1 text-left text-xs">Hızlı ara</span>
+              <kbd className="text-[9px] font-mono border border-border px-1 rounded">⌘K</kbd>
+            </>
+          )}
+        </button>
+
         {links.map((link) => {
           const active = location.pathname === link.to;
           const label = t(link.labelKey as any);
@@ -98,6 +131,43 @@ export default function AppSidebar() {
           <Bot className="w-4 h-4 shrink-0" />
           {!collapsed && "Kızılyürek"}
         </button>
+
+        {!collapsed && (
+          <div className="mt-4 pt-4 border-t border-border space-y-2">
+            <div className="flex items-center gap-1.5 px-1">
+              <Activity className="w-3 h-3 text-primary" />
+              <span className="text-[10px] font-mono text-muted-foreground uppercase">Aktivite</span>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              <div className="bg-secondary/40 rounded p-2">
+                <div className="text-[9px] font-mono text-muted-foreground">Sipariş</div>
+                <div className="text-sm font-mono font-bold text-primary">{stats.orders}</div>
+              </div>
+              <div className="bg-secondary/40 rounded p-2">
+                <div className="text-[9px] font-mono text-muted-foreground">Favori</div>
+                <div className="text-sm font-mono font-bold text-destructive">{stats.favs}</div>
+              </div>
+            </div>
+            {activity.length > 0 ? (
+              <div className="space-y-1">
+                {activity.map((a) => (
+                  <button
+                    key={a.id}
+                    onClick={() => a.link && navigate(a.link)}
+                    className="w-full text-left p-2 rounded bg-secondary/20 hover:bg-secondary/60 transition-all"
+                  >
+                    <div className="text-[10px] font-mono text-foreground truncate">{a.title}</div>
+                    <div className="text-[9px] font-mono text-muted-foreground">
+                      {new Date(a.created_at).toLocaleString("tr-TR", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-[10px] font-mono text-muted-foreground text-center py-2">Aktivite yok</div>
+            )}
+          </div>
+        )}
       </nav>
 
       <div className="p-3 border-t border-border">

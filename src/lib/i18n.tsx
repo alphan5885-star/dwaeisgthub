@@ -54,6 +54,7 @@ const translations = {
     market: "Market",
     myOrders: "Siparişlerim",
     store: "Mağaza",
+    watchlist: "Favoriler",
     
     // Customization
     customization: "Özelleştirme",
@@ -153,6 +154,7 @@ const translations = {
     market: "Market",
     myOrders: "My Orders",
     store: "Store",
+    watchlist: "Watchlist",
     
     customization: "Customization",
     themeColor: "Theme Color",
@@ -248,6 +250,7 @@ const translations = {
     market: "Маркет",
     myOrders: "Мои заказы",
     store: "Магазин",
+    watchlist: "Избранное",
     
     customization: "Настройка",
     themeColor: "Цвет темы",
