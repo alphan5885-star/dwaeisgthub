@@ -86,8 +86,9 @@ function applySettings(s: CustomizationSettings) {
 
 export function CustomizationProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<CustomizationSettings>(() => {
+    if (typeof window === "undefined") return defaults;
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = window.localStorage.getItem(STORAGE_KEY);
       return stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
     } catch {
       return defaults;

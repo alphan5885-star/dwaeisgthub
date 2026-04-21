@@ -317,8 +317,9 @@ const LANG_KEY = "app_language";
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => {
+    if (typeof window === "undefined") return "tr";
     try {
-      const stored = localStorage.getItem(LANG_KEY) as Language;
+      const stored = window.localStorage.getItem(LANG_KEY) as Language;
       return stored && ["tr", "en", "ru"].includes(stored) ? stored : "tr";
     } catch {
       return "tr";
