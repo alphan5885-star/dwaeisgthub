@@ -27,7 +27,8 @@ function purgeAllStorage() {
 
 export function SessionTimerProvider({ children }: { children: ReactNode }) {
   const [expiresAt, setExpiresAt] = useState<number | null>(() => {
-    const v = localStorage.getItem(STORAGE_KEY);
+    if (typeof window === "undefined") return null;
+    const v = window.localStorage.getItem(STORAGE_KEY);
     return v ? Number(v) : null;
   });
   const [remainingMs, setRemainingMs] = useState<number>(0);
