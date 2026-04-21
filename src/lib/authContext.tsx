@@ -78,15 +78,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string): Promise<string | null> => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return error.message;
+    const normalized = email.trim().toLowerCase();
+
+    // 1) Check account lockout BEFORE attempting auth
+    const { data: lockData } = await supabase.rpc("is_account_locked", { _email: normalized });
+    const lock = lockData as { locked: boolean; seconds_remaining?: number } | null;
+    if (lock?.locked) {
+      const mins = Math.ceil((lock.seconds_remaining ?? 0) / 60);
+      return `Hesap kilitli. ${mins} dakika sonra tekrar dene.`;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({ email: normalized, password });
+    if (error) {
+      // record failed attempt
+      await supabase.rpc("record_login_attempt", { _email: normalized, _success: false });
+      return error.message;
+    }
+
+    // success — reset counter
+    await supabase.rpc("record_login_attempt", { _email: normalized, _success: true });
 
     // Check if MFA is required
     const { data: factorsData } = await supabase.auth.mfa.listFactors();
     const verifiedFactors = factorsData?.totp?.filter(f => f.status === "verified") || [];
 
     if (verifiedFactors.length > 0) {
-      // Create MFA challenge
       const factor = verifiedFactors[0];
       const { data: challenge, error: challengeErr } = await supabase.auth.mfa.challenge({ factorId: factor.id });
       if (challengeErr) return challengeErr.message;
@@ -98,11 +114,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ip: "client",
       device: navigator.userAgent.slice(0, 50),
       success: true,
-      user_email: email,
+      user_email: normalized,
     });
 
     return null;
   };
+
 
   const verifyMfa = async (code: string): Promise<string | null> => {
     if (!mfaChallenge) return "No MFA challenge active";
