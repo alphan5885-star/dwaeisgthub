@@ -13,9 +13,10 @@ const NavLink = forwardRef<HTMLAnchorElement, NavLinkCompatProps>(
     return (
       <TSLink
         ref={ref as never}
-        {...(props as never)}
-        className={({ isActive }: { isActive: boolean }) =>
-          cn(className, isActive && activeClassName)
+        {...(props as any)}
+        className={
+          ((args: { isActive: boolean }) =>
+            cn(className, args.isActive && activeClassName)) as never
         }
       />
     );

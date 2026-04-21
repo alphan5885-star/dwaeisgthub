@@ -38,7 +38,7 @@ export default function VendorDashboard() {
     if (!user) return;
     const fetch = async () => {
       const { data } = await supabase.from("products").select("*").eq("vendor_id", user.id).order("created_at", { ascending: false });
-      if (data) setProducts(data);
+      if (data) setProducts(data as any);
     };
     fetch();
   }, [user]);

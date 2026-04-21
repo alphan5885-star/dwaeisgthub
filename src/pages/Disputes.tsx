@@ -32,8 +32,8 @@ export default function Disputes() {
     const fetch = async () => {
       const { data } = await supabase.from("disputes").select("*").order("created_at", { ascending: false });
       if (data && data.length > 0) {
-        setDisputes(data);
-        setSelected(data[0]);
+        setDisputes(data as any);
+        setSelected(data[0] as any);
       }
     };
     fetch();
@@ -47,7 +47,7 @@ export default function Disputes() {
         .select("*")
         .eq("dispute_id", selected.id)
         .order("created_at", { ascending: true });
-      if (data) setMessages(data);
+      if (data) setMessages(data as any);
     };
     fetchMessages();
   }, [selected]);

@@ -22,7 +22,7 @@ export default function SecurityLogs() {
         .select("*")
         .order("created_at", { ascending: false })
         .limit(50);
-      if (data) setLogs(data);
+      if (data) setLogs(data as any);
     };
     fetchLogs();
 

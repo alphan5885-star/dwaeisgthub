@@ -73,7 +73,7 @@ export default function VendorProfile() {
         .select("id, name, price, image_emoji, image_url, stock, category")
         .eq("vendor_id", vendorId)
         .gt("stock", 0);
-      if (prod) setProducts(prod);
+      if (prod) setProducts(prod as any);
 
       // Stats
       const { data: orders } = await supabase

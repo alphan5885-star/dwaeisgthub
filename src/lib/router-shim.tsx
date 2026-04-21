@@ -66,13 +66,14 @@ export const NavLink = forwardRef<HTMLAnchorElement, NavLinkProps>(function NavL
     <TSLink
       to={to}
       activeOptions={{ exact: end }}
-      ref={ref as any}
-      {...(rest as any)}
-      className={({ isActive }: { isActive: boolean }) =>
-        typeof className === "function" ? className({ isActive }) : className || ""
+      ref={ref as never}
+      {...(rest as never)}
+      className={
+        ((args: { isActive: boolean }) =>
+          typeof className === "function" ? className(args) : className || "") as never
       }
     >
-      {children as any}
+      {children as never}
     </TSLink>
   );
 });
