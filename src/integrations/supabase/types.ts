@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_lockouts: {
+        Row: {
+          email: string
+          failed_count: number
+          id: string
+          last_attempt: string
+          locked_until: string | null
+          updated_at: string
+        }
+        Insert: {
+          email: string
+          failed_count?: number
+          id?: string
+          last_attempt?: string
+          locked_until?: string | null
+          updated_at?: string
+        }
+        Update: {
+          email?: string
+          failed_count?: number
+          id?: string
+          last_attempt?: string
+          locked_until?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       admin_auto_withdraw: {
         Row: {
           admin_id: string
@@ -539,6 +566,33 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          action: string
+          count: number
+          created_at: string
+          id: string
+          identifier: string
+          window_start: string
+        }
+        Insert: {
+          action: string
+          count?: number
+          created_at?: string
+          id?: string
+          identifier: string
+          window_start?: string
+        }
+        Update: {
+          action?: string
+          count?: number
+          created_at?: string
+          id?: string
+          identifier?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       security_logs: {
         Row: {
           created_at: string
@@ -786,6 +840,15 @@ export type Database = {
     }
     Functions: {
       assign_role_on_signup: { Args: { _role: string }; Returns: undefined }
+      check_rate_limit: {
+        Args: {
+          _action: string
+          _identifier: string
+          _max_count: number
+          _window_seconds: number
+        }
+        Returns: Json
+      }
       confirm_delivery: { Args: { _order_id: string }; Returns: undefined }
       create_admin_user: { Args: never; Returns: undefined }
       get_user_role: { Args: { _user_id: string }; Returns: string }
@@ -803,7 +866,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_account_locked: { Args: { _email: string }; Returns: Json }
       panic_destroy: { Args: never; Returns: undefined }
+      record_login_attempt: {
+        Args: { _email: string; _success: boolean }
+        Returns: Json
+      }
       release_escrow: { Args: { _order_id: string }; Returns: undefined }
     }
     Enums: {
