@@ -67,7 +67,30 @@ export default function ProductDetail() {
   const startPayment = async () => {
     if (!product || !user) return;
     if (!captchaOk) { toast.error("Önce bot doğrulamasını tamamla"); return; }
+    if (product.type === "physical" && !shippingAddress.trim()) {
+      toast.error("Teslimat bilgisi gerekli");
+      return;
+    }
     setCreating(true);
+
+    // Auto-encrypt sensitive data with vendor's PGP key
+    let finalAddress: string | null = shippingAddress.trim() || null;
+    let finalNotes: string | null = orderNotes.trim() || null;
+    let encrypted = false;
+    if (vendorPgp && (finalAddress || finalNotes)) {
+      try {
+        const blob = `[ADDRESS]\n${finalAddress || "—"}\n\n[NOTES]\n${finalNotes || "—"}`;
+        const cipher = await encryptForRecipient(blob, vendorPgp);
+        finalAddress = cipher;
+        finalNotes = "🔐 PGP encrypted (see shipping_address)";
+        encrypted = true;
+      } catch (e) {
+        toast.error("PGP şifreleme başarısız, sipariş iptal");
+        setCreating(false);
+        return;
+      }
+    }
+
     const { data: order, error } = await supabase.from("orders").insert({
       product_id: product.id,
       buyer_id: user.id,
@@ -76,8 +99,11 @@ export default function ProductDetail() {
       amount: totalPrice,
       service_fee: serviceFee,
       delivery_method: product.type === "digital" ? "cargo" : deliveryMethod,
+      shipping_address: finalAddress,
+      notes: finalNotes,
     } as any).select().single();
     if (error || !order) { toast.error("Sipariş oluşturulamadı"); setCreating(false); return; }
+    if (encrypted) toast.success("🔐 Adres satıcının PGP anahtarıyla şifrelendi");
     setOrderId(order.id);
     setCreating(false);
   };
