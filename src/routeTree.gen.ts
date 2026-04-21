@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WatchlistRouteImport } from './routes/watchlist'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as VendorRouteImport } from './routes/vendor'
 import { Route as TransactionsRouteImport } from './routes/transactions'
@@ -28,6 +29,11 @@ import { Route as AdminStoreRouteImport } from './routes/admin.store'
 import { Route as AdminSecurityLogsRouteImport } from './routes/admin.security-logs'
 import { Route as AdminDisputesRouteImport } from './routes/admin.disputes'
 
+const WatchlistRoute = WatchlistRouteImport.update({
+  id: '/watchlist',
+  path: '/watchlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WalletRoute = WalletRouteImport.update({
   id: '/wallet',
   path: '/wallet',
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/transactions': typeof TransactionsRoute
   '/vendor': typeof VendorRouteWithChildren
   '/wallet': typeof WalletRoute
+  '/watchlist': typeof WatchlistRoute
   '/admin/disputes': typeof AdminDisputesRoute
   '/admin/security-logs': typeof AdminSecurityLogsRoute
   '/admin/store': typeof AdminStoreRoute
@@ -151,6 +158,7 @@ export interface FileRoutesByTo {
   '/transactions': typeof TransactionsRoute
   '/vendor': typeof VendorRouteWithChildren
   '/wallet': typeof WalletRoute
+  '/watchlist': typeof WatchlistRoute
   '/admin/disputes': typeof AdminDisputesRoute
   '/admin/security-logs': typeof AdminSecurityLogsRoute
   '/admin/store': typeof AdminStoreRoute
@@ -172,6 +180,7 @@ export interface FileRoutesById {
   '/transactions': typeof TransactionsRoute
   '/vendor': typeof VendorRouteWithChildren
   '/wallet': typeof WalletRoute
+  '/watchlist': typeof WatchlistRoute
   '/admin/disputes': typeof AdminDisputesRoute
   '/admin/security-logs': typeof AdminSecurityLogsRoute
   '/admin/store': typeof AdminStoreRoute
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/vendor'
     | '/wallet'
+    | '/watchlist'
     | '/admin/disputes'
     | '/admin/security-logs'
     | '/admin/store'
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/vendor'
     | '/wallet'
+    | '/watchlist'
     | '/admin/disputes'
     | '/admin/security-logs'
     | '/admin/store'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/vendor'
     | '/wallet'
+    | '/watchlist'
     | '/admin/disputes'
     | '/admin/security-logs'
     | '/admin/store'
@@ -255,11 +267,19 @@ export interface RootRouteChildren {
   TransactionsRoute: typeof TransactionsRoute
   VendorRoute: typeof VendorRouteWithChildren
   WalletRoute: typeof WalletRoute
+  WatchlistRoute: typeof WatchlistRoute
   ProductIdRoute: typeof ProductIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/watchlist': {
+      id: '/watchlist'
+      path: '/watchlist'
+      fullPath: '/watchlist'
+      preLoaderRoute: typeof WatchlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wallet': {
       id: '/wallet'
       path: '/wallet'
@@ -430,8 +450,18 @@ const rootRouteChildren: RootRouteChildren = {
   TransactionsRoute: TransactionsRoute,
   VendorRoute: VendorRouteWithChildren,
   WalletRoute: WalletRoute,
+  WatchlistRoute: WatchlistRoute,
   ProductIdRoute: ProductIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
