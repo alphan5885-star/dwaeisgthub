@@ -136,11 +136,12 @@ export default function ProductDetail() {
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border">
+            <div className="flex items-center gap-3 mt-4 pt-4 border-t border-border flex-wrap">
               <button onClick={() => window.location.assign(`/vendor/${product.vendor_id}`)} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary font-mono transition-colors">
                 <User className="w-3 h-3" /> {vendorName}
               </button>
               <VendorRating vendorId={product.vendor_id} size="md" />
+              <PgpBadge userId={product.vendor_id} size="sm" />
               <div className="text-xs text-muted-foreground font-mono">Stok: {product.stock}</div>
               {product.category && <div className="text-[10px] font-mono px-2 py-0.5 bg-secondary rounded text-muted-foreground">{product.category}</div>}
             </div>
@@ -158,9 +159,39 @@ export default function ProductDetail() {
         {!orderId && (
           <>
             {product.type === "physical" && user?.id !== product.vendor_id && (
-              <div className="glass-card rounded-lg p-4 mb-4">
-                <DeliveryMethodSelector value={deliveryMethod} onChange={setDeliveryMethod} productType={product.type} />
-              </div>
+              <>
+                <div className="glass-card rounded-lg p-4 mb-4">
+                  <DeliveryMethodSelector value={deliveryMethod} onChange={setDeliveryMethod} productType={product.type} />
+                </div>
+                <div className="glass-card rounded-lg p-4 mb-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Lock className={`w-4 h-4 ${vendorPgp ? "text-green-400" : "text-muted-foreground"}`} />
+                    <span className="text-xs font-mono font-bold text-foreground">Teslimat Bilgileri</span>
+                    {vendorPgp ? (
+                      <span className="ml-auto text-[10px] font-mono text-green-400 px-2 py-0.5 rounded bg-green-500/10 border border-green-500/30">🔐 PGP otomatik şifrelenecek</span>
+                    ) : (
+                      <span className="ml-auto text-[10px] font-mono text-yellow-500">⚠ Satıcının PGP key'i yok — düz metin</span>
+                    )}
+                  </div>
+                  <textarea
+                    value={shippingAddress}
+                    onChange={(e) => setShippingAddress(e.target.value)}
+                    rows={3}
+                    placeholder="Teslimat adresi / dead-drop koordinatları / posta kutusu..."
+                    className="w-full bg-background border border-border rounded px-2 py-2 text-xs font-mono focus:outline-none focus:border-primary resize-none"
+                  />
+                  <textarea
+                    value={orderNotes}
+                    onChange={(e) => setOrderNotes(e.target.value)}
+                    rows={2}
+                    placeholder="Notlar (isteğe bağlı)"
+                    className="w-full bg-background border border-border rounded px-2 py-2 text-xs font-mono focus:outline-none focus:border-primary resize-none"
+                  />
+                  {vendorPgp && (
+                    <p className="text-[10px] font-mono text-muted-foreground">İçerik tarayıcında satıcının public key'i ile şifrelenir, sunucu ham veriyi <span className="text-primary">göremez</span>.</p>
+                  )}
+                </div>
+              </>
             )}
 
             {user?.id === product.vendor_id ? (
