@@ -62,19 +62,19 @@ export const NavLink = forwardRef<HTMLAnchorElement, NavLinkProps>(function NavL
   { to, children, className, end, ...rest },
   ref,
 ) {
+  const Anchor = TSLink as unknown as React.ComponentType<Record<string, unknown>>;
   return (
-    <TSLink
+    <Anchor
       to={to}
       activeOptions={{ exact: end }}
-      ref={ref as never}
-      {...(rest as never)}
-      className={
-        ((args: { isActive: boolean }) =>
-          typeof className === "function" ? className(args) : className || "") as never
+      ref={ref}
+      {...(rest as Record<string, unknown>)}
+      className={(args: { isActive: boolean }) =>
+        typeof className === "function" ? className(args) : className || ""
       }
     >
-      {children as never}
-    </TSLink>
+      {children}
+    </Anchor>
   );
 });
 
