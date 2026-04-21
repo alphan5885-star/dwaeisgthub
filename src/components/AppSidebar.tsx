@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/authContext";
 import { useCustomization } from "@/lib/customizationContext";
 import { useI18n } from "@/lib/i18n";
 import { useNavigate, useLocation } from "@/lib/router-shim";
-import { Shield, LayoutDashboard, ShoppingCart, Store, Wallet, FileWarning, ScrollText, LogOut, ArrowRightLeft, User, Package, Lock, Coins, MessageSquare, Palette, ShoppingBag, Bot } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Shield, LayoutDashboard, ShoppingCart, Store, Wallet, FileWarning, ScrollText, LogOut, ArrowRightLeft, User, Package, Lock, Coins, MessageSquare, Palette, ShoppingBag, Bot, Heart, Search, Activity } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
 
 type LinkDef = { to: string; labelKey: string; icon: any };
@@ -26,6 +28,7 @@ const adminLinks: LinkDef[] = [
 const vendorLinks: LinkDef[] = [
   { to: "/vendor", labelKey: "myProducts", icon: Store },
   { to: "/market", labelKey: "market", icon: ShoppingCart },
+  { to: "/watchlist", labelKey: "watchlist", icon: Heart },
   { to: "/orders", labelKey: "myOrders", icon: Package },
   { to: "/wallet", labelKey: "wallet", icon: Coins },
   { to: "/vendor/wallet", labelKey: "wallet", icon: Wallet },
@@ -39,6 +42,7 @@ const vendorLinks: LinkDef[] = [
 
 const buyerLinks: LinkDef[] = [
   { to: "/market", labelKey: "market", icon: ShoppingCart },
+  { to: "/watchlist", labelKey: "watchlist", icon: Heart },
   { to: "/orders", labelKey: "myOrders", icon: Package },
   { to: "/wallet", labelKey: "wallet", icon: Coins },
   { to: "/transactions", labelKey: "transactions", icon: ArrowRightLeft },
