@@ -1,5 +1,4 @@
-// react-router-dom -> TanStack Router uyum katmanı
-// Sayfaları minimum değişiklikle taşımak için.
+// react-router-dom -> TanStack Router uyum katmanı (basit)
 import {
   Link as TSLink,
   useNavigate as tsUseNavigate,
@@ -7,17 +6,17 @@ import {
   useLocation as tsUseLocation,
   useRouter,
 } from "@tanstack/react-router";
-import { forwardRef, type ComponentProps, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 export function useNavigate() {
   const nav = tsUseNavigate();
-  // react-router-dom: navigate("/foo") veya navigate(-1) veya navigate("/foo", { replace: true })
   return (to: string | number, opts?: { replace?: boolean }) => {
     if (typeof to === "number") {
       window.history.go(to);
       return;
     }
-    nav({ to, replace: opts?.replace });
+    nav({ to, replace: opts?.replace } as never);
   };
 }
 
@@ -29,64 +28,59 @@ export function useLocation() {
   const loc = tsUseLocation();
   return {
     pathname: loc.pathname,
-    search: loc.search ? "?" + new URLSearchParams(loc.search as Record<string, string>).toString() : "",
+    search: typeof loc.search === "string" ? loc.search : "",
     hash: loc.hash,
     state: loc.state,
   };
 }
 
-type LinkProps = {
+interface AnyProps {
   to: string;
   children?: ReactNode;
   className?: string;
   replace?: boolean;
-} & Omit<ComponentProps<"a">, "href">;
+  [key: string]: unknown;
+}
 
-export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
-  { to, children, className, replace, ...rest },
-  ref,
-) {
+export function Link({ to, children, className, replace, ...rest }: AnyProps) {
+  const Anchor = TSLink as unknown as React.FC<Record<string, unknown>>;
   return (
-    <TSLink to={to} replace={replace} className={className} ref={ref as any} {...(rest as any)}>
+    <Anchor to={to} replace={replace} className={className} {...rest}>
       {children}
-    </TSLink>
+    </Anchor>
   );
-});
+}
 
-type NavLinkProps = LinkProps & {
+interface NavLinkProps extends AnyProps {
   end?: boolean;
-  className?: string | ((args: { isActive: boolean }) => string);
-};
+  className?: string;
+  activeClassName?: string;
+}
 
-export const NavLink = forwardRef<HTMLAnchorElement, NavLinkProps>(function NavLink(
-  { to, children, className, end, ...rest },
-  ref,
-) {
-  const Anchor = TSLink as unknown as React.ComponentType<Record<string, unknown>>;
+export function NavLink({ to, children, className, end, activeClassName, ...rest }: NavLinkProps) {
+  const Anchor = TSLink as unknown as React.FC<Record<string, unknown>>;
   return (
     <Anchor
       to={to}
       activeOptions={{ exact: end }}
-      ref={ref}
-      {...(rest as Record<string, unknown>)}
-      className={(args: { isActive: boolean }) =>
-        typeof className === "function" ? className(args) : className || ""
-      }
+      activeProps={{ className: cn(className, activeClassName) }}
+      className={className}
+      {...rest}
     >
       {children}
     </Anchor>
   );
-});
+}
 
 export function Navigate({ to, replace }: { to: string; replace?: boolean }) {
   const nav = tsUseNavigate();
-  // microtask redirect
-  Promise.resolve().then(() => nav({ to, replace }));
+  useEffect(() => {
+    nav({ to, replace } as never);
+  }, [to, replace, nav]);
   return null;
 }
 
 export function Outlet() {
-  // re-export not needed; sayfalar Outlet kullanmıyor (App.tsx'te Routes vardı)
   return null;
 }
 
