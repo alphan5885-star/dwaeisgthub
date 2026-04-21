@@ -6,6 +6,7 @@ import { Key, Package, Search, User, MapPin, Eye } from "lucide-react";
 import { motion } from "framer-motion";
 import VendorRating from "@/components/VendorRating";
 import ProductDescriptionModal from "@/components/ProductDescriptionModal";
+import WatchlistButton from "@/components/WatchlistButton";
 
 const SERVICE_FEE_RATE = 0.05;
 const FIXED_CATEGORIES = ["Dijital Veriler", "Lojistik Rotaları", "VIP Erişim"];
@@ -156,6 +157,9 @@ export default function Market() {
                     {p.category}
                   </span>
                 )}
+                <div className="absolute top-1 right-1" onClick={(e) => e.stopPropagation()}>
+                  <WatchlistButton productId={p.id} size="sm" />
+                </div>
               </div>
               <div className="p-4">
                 <div className="text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">{p.name}</div>

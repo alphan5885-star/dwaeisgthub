@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useState } from "react";
 import AppSidebar from "./AppSidebar";
 import SessionTimerBadge from "./SessionTimerBadge";
 import KizilyurekAssistant from "./KizilyurekAssistant";
+import CommandPalette from "./CommandPalette";
 import { useBackground } from "@/lib/backgroundContext";
 import { useCustomization } from "@/lib/customizationContext";
 
@@ -40,6 +41,7 @@ export default function PageShell({ children }: { children: ReactNode }) {
         onOpenChange={setAssistantOpen}
         hideFab
       />
+      <CommandPalette />
     </div>
   );
 }
