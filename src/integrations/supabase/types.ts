@@ -446,6 +446,7 @@ export type Database = {
       products: {
         Row: {
           category: string | null
+          commission_rate: number | null
           created_at: string
           delivery_data: string | null
           description: string | null
@@ -466,6 +467,7 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          commission_rate?: number | null
           created_at?: string
           delivery_data?: string | null
           description?: string | null
@@ -486,6 +488,7 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          commission_rate?: number | null
           created_at?: string
           delivery_data?: string | null
           description?: string | null
