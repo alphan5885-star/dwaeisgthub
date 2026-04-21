@@ -325,9 +325,6 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       return "tr";
     }
   });
-      return "tr";
-    }
-  });
 
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
