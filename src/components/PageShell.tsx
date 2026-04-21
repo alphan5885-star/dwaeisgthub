@@ -19,7 +19,7 @@ export default function PageShell({ children }: { children: ReactNode }) {
 
   const collapsed = settings.sidebarCollapsed;
   const isRight = settings.sidebarPosition === "right";
-  const margin = collapsed ? (isRight ? "mr-16" : "ml-16") : (isRight ? "mr-56" : "ml-56");
+  const margin = collapsed ? (isRight ? "mr-16" : "ml-16") : (isRight ? "mr-60" : "ml-60");
 
   return (
     <div className="min-h-screen bg-background relative">
