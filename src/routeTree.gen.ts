@@ -9,38 +9,327 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WalletRouteImport } from './routes/wallet'
+import { Route as VendorRouteImport } from './routes/vendor'
+import { Route as TransactionsRouteImport } from './routes/transactions'
+import { Route as SecurityRouteImport } from './routes/security'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as OrdersRouteImport } from './routes/orders'
+import { Route as MarketRouteImport } from './routes/market'
+import { Route as ForumRouteImport } from './routes/forum'
+import { Route as CustomizationRouteImport } from './routes/customization'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VendorWalletRouteImport } from './routes/vendor.wallet'
+import { Route as VendorBondRouteImport } from './routes/vendor.bond'
+import { Route as VendorVendorIdRouteImport } from './routes/vendor.$vendorId'
+import { Route as ProductIdRouteImport } from './routes/product.$id'
+import { Route as AdminStoreRouteImport } from './routes/admin.store'
+import { Route as AdminSecurityLogsRouteImport } from './routes/admin.security-logs'
+import { Route as AdminDisputesRouteImport } from './routes/admin.disputes'
 
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VendorRoute = VendorRouteImport.update({
+  id: '/vendor',
+  path: '/vendor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransactionsRoute = TransactionsRouteImport.update({
+  id: '/transactions',
+  path: '/transactions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SecurityRoute = SecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrdersRoute = OrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketRoute = MarketRouteImport.update({
+  id: '/market',
+  path: '/market',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForumRoute = ForumRouteImport.update({
+  id: '/forum',
+  path: '/forum',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomizationRoute = CustomizationRouteImport.update({
+  id: '/customization',
+  path: '/customization',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VendorWalletRoute = VendorWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => VendorRoute,
+} as any)
+const VendorBondRoute = VendorBondRouteImport.update({
+  id: '/bond',
+  path: '/bond',
+  getParentRoute: () => VendorRoute,
+} as any)
+const VendorVendorIdRoute = VendorVendorIdRouteImport.update({
+  id: '/$vendorId',
+  path: '/$vendorId',
+  getParentRoute: () => VendorRoute,
+} as any)
+const ProductIdRoute = ProductIdRouteImport.update({
+  id: '/product/$id',
+  path: '/product/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminStoreRoute = AdminStoreRouteImport.update({
+  id: '/store',
+  path: '/store',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSecurityLogsRoute = AdminSecurityLogsRouteImport.update({
+  id: '/security-logs',
+  path: '/security-logs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDisputesRoute = AdminDisputesRouteImport.update({
+  id: '/disputes',
+  path: '/disputes',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/customization': typeof CustomizationRoute
+  '/forum': typeof ForumRoute
+  '/market': typeof MarketRoute
+  '/orders': typeof OrdersRoute
+  '/profile': typeof ProfileRoute
+  '/security': typeof SecurityRoute
+  '/transactions': typeof TransactionsRoute
+  '/vendor': typeof VendorRouteWithChildren
+  '/wallet': typeof WalletRoute
+  '/admin/disputes': typeof AdminDisputesRoute
+  '/admin/security-logs': typeof AdminSecurityLogsRoute
+  '/admin/store': typeof AdminStoreRoute
+  '/product/$id': typeof ProductIdRoute
+  '/vendor/$vendorId': typeof VendorVendorIdRoute
+  '/vendor/bond': typeof VendorBondRoute
+  '/vendor/wallet': typeof VendorWalletRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/customization': typeof CustomizationRoute
+  '/forum': typeof ForumRoute
+  '/market': typeof MarketRoute
+  '/orders': typeof OrdersRoute
+  '/profile': typeof ProfileRoute
+  '/security': typeof SecurityRoute
+  '/transactions': typeof TransactionsRoute
+  '/vendor': typeof VendorRouteWithChildren
+  '/wallet': typeof WalletRoute
+  '/admin/disputes': typeof AdminDisputesRoute
+  '/admin/security-logs': typeof AdminSecurityLogsRoute
+  '/admin/store': typeof AdminStoreRoute
+  '/product/$id': typeof ProductIdRoute
+  '/vendor/$vendorId': typeof VendorVendorIdRoute
+  '/vendor/bond': typeof VendorBondRoute
+  '/vendor/wallet': typeof VendorWalletRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/customization': typeof CustomizationRoute
+  '/forum': typeof ForumRoute
+  '/market': typeof MarketRoute
+  '/orders': typeof OrdersRoute
+  '/profile': typeof ProfileRoute
+  '/security': typeof SecurityRoute
+  '/transactions': typeof TransactionsRoute
+  '/vendor': typeof VendorRouteWithChildren
+  '/wallet': typeof WalletRoute
+  '/admin/disputes': typeof AdminDisputesRoute
+  '/admin/security-logs': typeof AdminSecurityLogsRoute
+  '/admin/store': typeof AdminStoreRoute
+  '/product/$id': typeof ProductIdRoute
+  '/vendor/$vendorId': typeof VendorVendorIdRoute
+  '/vendor/bond': typeof VendorBondRoute
+  '/vendor/wallet': typeof VendorWalletRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/customization'
+    | '/forum'
+    | '/market'
+    | '/orders'
+    | '/profile'
+    | '/security'
+    | '/transactions'
+    | '/vendor'
+    | '/wallet'
+    | '/admin/disputes'
+    | '/admin/security-logs'
+    | '/admin/store'
+    | '/product/$id'
+    | '/vendor/$vendorId'
+    | '/vendor/bond'
+    | '/vendor/wallet'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/admin'
+    | '/customization'
+    | '/forum'
+    | '/market'
+    | '/orders'
+    | '/profile'
+    | '/security'
+    | '/transactions'
+    | '/vendor'
+    | '/wallet'
+    | '/admin/disputes'
+    | '/admin/security-logs'
+    | '/admin/store'
+    | '/product/$id'
+    | '/vendor/$vendorId'
+    | '/vendor/bond'
+    | '/vendor/wallet'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/customization'
+    | '/forum'
+    | '/market'
+    | '/orders'
+    | '/profile'
+    | '/security'
+    | '/transactions'
+    | '/vendor'
+    | '/wallet'
+    | '/admin/disputes'
+    | '/admin/security-logs'
+    | '/admin/store'
+    | '/product/$id'
+    | '/vendor/$vendorId'
+    | '/vendor/bond'
+    | '/vendor/wallet'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  CustomizationRoute: typeof CustomizationRoute
+  ForumRoute: typeof ForumRoute
+  MarketRoute: typeof MarketRoute
+  OrdersRoute: typeof OrdersRoute
+  ProfileRoute: typeof ProfileRoute
+  SecurityRoute: typeof SecurityRoute
+  TransactionsRoute: typeof TransactionsRoute
+  VendorRoute: typeof VendorRouteWithChildren
+  WalletRoute: typeof WalletRoute
+  ProductIdRoute: typeof ProductIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vendor': {
+      id: '/vendor'
+      path: '/vendor'
+      fullPath: '/vendor'
+      preLoaderRoute: typeof VendorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transactions': {
+      id: '/transactions'
+      path: '/transactions'
+      fullPath: '/transactions'
+      preLoaderRoute: typeof TransactionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/security': {
+      id: '/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/orders': {
+      id: '/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof OrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/market': {
+      id: '/market'
+      path: '/market'
+      fullPath: '/market'
+      preLoaderRoute: typeof MarketRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forum': {
+      id: '/forum'
+      path: '/forum'
+      fullPath: '/forum'
+      preLoaderRoute: typeof ForumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customization': {
+      id: '/customization'
+      path: '/customization'
+      fullPath: '/customization'
+      preLoaderRoute: typeof CustomizationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,21 +337,101 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/vendor/wallet': {
+      id: '/vendor/wallet'
+      path: '/wallet'
+      fullPath: '/vendor/wallet'
+      preLoaderRoute: typeof VendorWalletRouteImport
+      parentRoute: typeof VendorRoute
+    }
+    '/vendor/bond': {
+      id: '/vendor/bond'
+      path: '/bond'
+      fullPath: '/vendor/bond'
+      preLoaderRoute: typeof VendorBondRouteImport
+      parentRoute: typeof VendorRoute
+    }
+    '/vendor/$vendorId': {
+      id: '/vendor/$vendorId'
+      path: '/$vendorId'
+      fullPath: '/vendor/$vendorId'
+      preLoaderRoute: typeof VendorVendorIdRouteImport
+      parentRoute: typeof VendorRoute
+    }
+    '/product/$id': {
+      id: '/product/$id'
+      path: '/product/$id'
+      fullPath: '/product/$id'
+      preLoaderRoute: typeof ProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/store': {
+      id: '/admin/store'
+      path: '/store'
+      fullPath: '/admin/store'
+      preLoaderRoute: typeof AdminStoreRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/security-logs': {
+      id: '/admin/security-logs'
+      path: '/security-logs'
+      fullPath: '/admin/security-logs'
+      preLoaderRoute: typeof AdminSecurityLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/disputes': {
+      id: '/admin/disputes'
+      path: '/disputes'
+      fullPath: '/admin/disputes'
+      preLoaderRoute: typeof AdminDisputesRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminDisputesRoute: typeof AdminDisputesRoute
+  AdminSecurityLogsRoute: typeof AdminSecurityLogsRoute
+  AdminStoreRoute: typeof AdminStoreRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminDisputesRoute: AdminDisputesRoute,
+  AdminSecurityLogsRoute: AdminSecurityLogsRoute,
+  AdminStoreRoute: AdminStoreRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface VendorRouteChildren {
+  VendorVendorIdRoute: typeof VendorVendorIdRoute
+  VendorBondRoute: typeof VendorBondRoute
+  VendorWalletRoute: typeof VendorWalletRoute
+}
+
+const VendorRouteChildren: VendorRouteChildren = {
+  VendorVendorIdRoute: VendorVendorIdRoute,
+  VendorBondRoute: VendorBondRoute,
+  VendorWalletRoute: VendorWalletRoute,
+}
+
+const VendorRouteWithChildren =
+  VendorRoute._addFileChildren(VendorRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
+  CustomizationRoute: CustomizationRoute,
+  ForumRoute: ForumRoute,
+  MarketRoute: MarketRoute,
+  OrdersRoute: OrdersRoute,
+  ProfileRoute: ProfileRoute,
+  SecurityRoute: SecurityRoute,
+  TransactionsRoute: TransactionsRoute,
+  VendorRoute: VendorRouteWithChildren,
+  WalletRoute: WalletRoute,
+  ProductIdRoute: ProductIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
