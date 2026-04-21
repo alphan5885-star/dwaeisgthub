@@ -1,82 +1,42 @@
-import { useEffect, useState, useCallback } from "react";
-import { ShieldCheck, RefreshCw, Timer, AlertTriangle } from "lucide-react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { ShieldCheck, RefreshCw, AlertTriangle } from "lucide-react";
 
 interface Props {
   onValidChange: (valid: boolean) => void;
   label?: string;
 }
 
-interface Challenge {
-  expr: string;
-  answer: number;
-}
+const TRACK_WIDTH = 280;
+const PIECE_SIZE = 42;
+const TOLERANCE = 6; // px
+const MAX_ATTEMPTS = 4;
 
-// Generate a brutal multi-operator challenge with parentheses
-function makeChallenge(): Challenge {
-  const ops = ["+", "-", "*"] as const;
-  const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
-  const pick = <T,>(arr: readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
-
-  // Pattern: (a OP1 b) OP2 (c OP3 d)
-  const a = rand(2, 19);
-  const b = rand(2, 19);
-  const c = rand(2, 19);
-  const d = rand(2, 19);
-  const o1 = pick(ops);
-  const o2 = pick(ops);
-  const o3 = pick(ops);
-
-  const expr = `(${a} ${o1} ${b}) ${o2} (${c} ${o3} ${d})`;
-  // eslint-disable-next-line no-new-func
-  const answer = Function(`"use strict"; return (${expr.replace(/\s/g, "")});`)() as number;
-  return { expr, answer };
-}
-
-const TIME_LIMIT = 25; // seconds
-const MAX_ATTEMPTS = 3;
-
-export default function MathCaptcha({ onValidChange, label = "Bot doğrulama (zor mod)" }: Props) {
-  const [challenge, setChallenge] = useState<Challenge>(() => ({ expr: "...", answer: 0 }));
-  const [val, setVal] = useState("");
+export default function MathCaptcha({ onValidChange, label = "Puzzle doğrulama" }: Props) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [target, setTarget] = useState(0); // target X for the gap
+  const [pos, setPos] = useState(0); // current piece X
+  const [dragging, setDragging] = useState(false);
   const [valid, setValid] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [locked, setLocked] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(TIME_LIMIT);
   const [shake, setShake] = useState(false);
+  const [seed, setSeed] = useState(0);
 
-  const regen = useCallback((resetAttempts = false) => {
-    setChallenge(makeChallenge());
-    setVal("");
+  const maxX = TRACK_WIDTH - PIECE_SIZE;
+
+  const regen = useCallback(() => {
+    // place target somewhere not too close to start
+    const t = Math.floor(60 + Math.random() * (maxX - 80));
+    setTarget(t);
+    setPos(0);
     setValid(false);
-    setSecondsLeft(TIME_LIMIT);
-    if (resetAttempts) {
-      setAttempts(0);
-      setLocked(false);
-    }
+    setSeed((s) => s + 1);
     onValidChange(false);
-  }, [onValidChange]);
+  }, [maxX, onValidChange]);
 
-  // Initial generation client-side only (avoid SSR mismatch)
   useEffect(() => {
-    regen(true);
+    regen();
   }, []);
-
-  // Countdown
-  useEffect(() => {
-    if (locked || valid) return;
-    if (secondsLeft <= 0) {
-      // Time up — count as failed attempt
-      setAttempts((a) => {
-        const n = a + 1;
-        if (n >= MAX_ATTEMPTS) setLocked(true);
-        return n;
-      });
-      regen(false);
-      return;
-    }
-    const t = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [secondsLeft, locked, valid, regen]);
 
   // Lockout cooldown
   useEffect(() => {
@@ -84,28 +44,77 @@ export default function MathCaptcha({ onValidChange, label = "Bot doğrulama (zo
     const t = setTimeout(() => {
       setLocked(false);
       setAttempts(0);
-      regen(true);
+      regen();
     }, 30000);
     return () => clearTimeout(t);
   }, [locked, regen]);
 
-  const handleSubmit = () => {
-    if (locked) return;
-    const parsed = parseInt(val, 10);
-    if (!isNaN(parsed) && parsed === challenge.answer) {
+  const startDrag = (clientX: number) => {
+    if (locked || valid) return;
+    setDragging(true);
+  };
+
+  const moveDrag = useCallback(
+    (clientX: number) => {
+      if (!dragging || !trackRef.current) return;
+      const rect = trackRef.current.getBoundingClientRect();
+      let x = clientX - rect.left - PIECE_SIZE / 2;
+      if (x < 0) x = 0;
+      if (x > maxX) x = maxX;
+      setPos(x);
+    },
+    [dragging, maxX]
+  );
+
+  const endDrag = useCallback(() => {
+    if (!dragging) return;
+    setDragging(false);
+    const diff = Math.abs(pos - target);
+    if (diff <= TOLERANCE) {
       setValid(true);
       onValidChange(true);
     } else {
       setShake(true);
-      setTimeout(() => setShake(false), 400);
+      setTimeout(() => setShake(false), 350);
       setAttempts((a) => {
         const n = a + 1;
         if (n >= MAX_ATTEMPTS) setLocked(true);
         return n;
       });
-      regen(false);
+      setTimeout(() => regen(), 400);
     }
-  };
+  }, [dragging, pos, target, onValidChange, regen]);
+
+  // Global mouse/touch listeners while dragging
+  useEffect(() => {
+    if (!dragging) return;
+    const onMove = (e: MouseEvent) => moveDrag(e.clientX);
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches[0]) moveDrag(e.touches[0].clientX);
+    };
+    const onUp = () => endDrag();
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onUp);
+    };
+  }, [dragging, moveDrag, endDrag]);
+
+  // Generate background pattern (deterministic per seed)
+  const dots = Array.from({ length: 18 }).map((_, i) => {
+    const r = ((seed * 7 + i * 13) % 100) / 100;
+    const g = ((seed * 11 + i * 17) % 100) / 100;
+    return {
+      left: `${r * 100}%`,
+      top: `${g * 100}%`,
+      size: 4 + ((i + seed) % 5),
+    };
+  });
 
   return (
     <div className="space-y-2">
@@ -114,9 +123,7 @@ export default function MathCaptcha({ onValidChange, label = "Bot doğrulama (zo
           <ShieldCheck className="w-3 h-3" /> {label}
         </span>
         {!locked && !valid && (
-          <span className="flex items-center gap-1 text-primary">
-            <Timer className="w-3 h-3" /> {secondsLeft}s · {MAX_ATTEMPTS - attempts} hak
-          </span>
+          <span className="text-primary">{MAX_ATTEMPTS - attempts} hak</span>
         )}
       </label>
 
@@ -130,49 +137,71 @@ export default function MathCaptcha({ onValidChange, label = "Bot doğrulama (zo
           <ShieldCheck className="w-4 h-4" /> İnsan doğrulandı.
         </div>
       ) : (
-        <>
-          <div className={`flex items-center gap-2 ${shake ? "animate-pulse" : ""}`}>
-            <span
-              className="font-mono text-sm bg-secondary/40 px-3 py-2 rounded border border-border select-none tracking-widest"
-              style={{ letterSpacing: "0.15em" }}
-            >
-              {challenge.expr} = ?
-            </span>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={val}
-              autoComplete="off"
-              onChange={(e) => setVal(e.target.value.replace(/[^\d-]/g, "").slice(0, 6))}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-              }}
-              className="flex-1 bg-background border border-border rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary"
-              placeholder="cevap"
+        <div className="space-y-2">
+          {/* Puzzle scene */}
+          <div
+            ref={trackRef}
+            className={`relative rounded border border-border overflow-hidden bg-secondary/30 ${shake ? "animate-pulse" : ""}`}
+            style={{ width: TRACK_WIDTH, height: 100, maxWidth: "100%" }}
+          >
+            {/* decorative dots */}
+            {dots.map((d, i) => (
+              <span
+                key={i}
+                className="absolute rounded-full bg-primary/20"
+                style={{ left: d.left, top: d.top, width: d.size, height: d.size }}
+              />
+            ))}
+
+            {/* Target gap (where the piece must land) */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 rounded border-2 border-dashed border-primary/60 bg-background/50"
+              style={{ left: target, width: PIECE_SIZE, height: PIECE_SIZE }}
             />
-            <button
-              type="button"
-              onClick={handleSubmit}
-              className="px-3 py-2 text-xs font-mono bg-primary/20 text-primary border border-primary/40 rounded hover:bg-primary/30"
+
+            {/* Draggable piece */}
+            <div
+              role="slider"
+              aria-label="Puzzle parçası"
+              aria-valuenow={Math.round(pos)}
+              aria-valuemin={0}
+              aria-valuemax={maxX}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                startDrag(e.clientX);
+              }}
+              onTouchStart={(e) => {
+                if (e.touches[0]) startDrag(e.touches[0].clientX);
+              }}
+              className={`absolute top-1/2 -translate-y-1/2 rounded shadow-lg cursor-grab active:cursor-grabbing select-none flex items-center justify-center font-mono text-xs ${
+                dragging ? "scale-110" : ""
+              } bg-primary text-primary-foreground border-2 border-primary-foreground/30 transition-transform`}
+              style={{
+                left: pos,
+                width: PIECE_SIZE,
+                height: PIECE_SIZE,
+                touchAction: "none",
+              }}
             >
-              Doğrula
-            </button>
+              ⇆
+            </div>
+          </div>
+
+          {/* Slider track / hint */}
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] text-muted-foreground font-mono">
+              Parçayı sürükle, kesik çerçeveye bırak.
+            </p>
             <button
               type="button"
-              onClick={() => regen(false)}
-              className="p-2 text-muted-foreground hover:text-foreground"
+              onClick={regen}
+              className="p-1.5 text-muted-foreground hover:text-foreground"
               aria-label="Yenile"
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className="w-3.5 h-3.5" />
             </button>
           </div>
-          <p className="text-[10px] text-muted-foreground font-mono">
-            Operatör önceliğine dikkat et: parantez → çarpma → toplama/çıkarma.
-          </p>
-        </>
+        </div>
       )}
     </div>
   );
