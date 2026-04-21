@@ -18,10 +18,10 @@ export const useBackground = () => useContext(BackgroundContext);
 
 export function BackgroundProvider({ children }: { children: ReactNode }) {
   const [backgroundUrl, setBackgroundUrlState] = useState<string | null>(
-    () => localStorage.getItem("app_bg_url")
+    () => (typeof window === "undefined" ? null : window.localStorage.getItem("app_bg_url"))
   );
   const [backgroundOpacity, setBackgroundOpacityState] = useState<number>(
-    () => parseFloat(localStorage.getItem("app_bg_opacity") || "0.15")
+    () => (typeof window === "undefined" ? 0.15 : parseFloat(window.localStorage.getItem("app_bg_opacity") || "0.15"))
   );
 
   const setBackgroundUrl = (url: string | null) => {
