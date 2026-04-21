@@ -3,13 +3,15 @@ import { useParams } from "@/lib/router-shim";
 import PageShell from "@/components/PageShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/authContext";
-import { ShoppingCart, Key, Package, User, Shield, Hash } from "lucide-react";
+import { ShoppingCart, Key, Package, User, Shield, Hash, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import VendorRating from "@/components/VendorRating";
+import PgpBadge from "@/components/PgpBadge";
 import DeliveryMethodSelector from "@/components/DeliveryMethodSelector";
 import MathCaptcha from "@/components/MathCaptcha";
 import PaymentTracker from "@/components/PaymentTracker";
+import { encryptForRecipient } from "@/lib/pgp";
 
 const SERVICE_FEE_RATE = 0.05;
 type DeliveryMethod = "cargo" | "dead_drop" | "mailbox";
@@ -34,9 +36,12 @@ export default function ProductDetail() {
   const { user } = useAuth();
   const [product, setProduct] = useState<ProductRow | null>(null);
   const [vendorName, setVendorName] = useState<string>("");
+  const [vendorPgp, setVendorPgp] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("cargo");
+  const [shippingAddress, setShippingAddress] = useState("");
+  const [orderNotes, setOrderNotes] = useState("");
   const [captchaOk, setCaptchaOk] = useState(false);
   const [creating, setCreating] = useState(false);
 
@@ -51,6 +56,8 @@ export default function ProductDetail() {
         setProduct(data as ProductRow);
         const { data: profile } = await supabase.from("profiles").select("display_name").eq("user_id", data.vendor_id).single();
         if (profile) setVendorName(profile.display_name || "Anonim Satıcı");
+        const { data: pgp } = await (supabase as any).from("user_pgp_keys").select("public_key").eq("user_id", data.vendor_id).maybeSingle();
+        if (pgp?.public_key) setVendorPgp(pgp.public_key);
       }
       setLoading(false);
     };
