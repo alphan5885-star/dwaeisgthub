@@ -24,7 +24,7 @@ export default function SecuritySettings() {
   useEffect(() => {
     if (!user) return;
     const fetchData = async () => {
-      const { data } = await supabase.from("anti_phishing_codes").select("code").eq("user_id", user.id).single();
+      const { data } = await supabase.from("anti_phishing_codes").select("code").eq("user_id", user.id).maybeSingle();
       if (data) setSavedCode(data.code);
       await loadMfaFactors();
     };
