@@ -69,7 +69,7 @@ export default function AppSidebar() {
 
   useEffect(() => {
     if (!user || collapsed) return;
-    (async () => {
+    const timer = setTimeout(async () => {
       const [{ data: notifs }, { count: orderCount }, { count: favCount }] = await Promise.all([
         supabase.from("notifications").select("id, title, created_at, link").eq("user_id", user.id).order("created_at", { ascending: false }).limit(3),
         supabase.from("orders").select("id", { count: "exact", head: true }).eq("buyer_id", user.id),
@@ -77,7 +77,8 @@ export default function AppSidebar() {
       ]);
       setActivity((notifs as any) || []);
       setStats({ orders: orderCount || 0, favs: favCount || 0 });
-    })();
+    }, 250);
+    return () => clearTimeout(timer);
   }, [user, collapsed, location.pathname]);
 
   return (
