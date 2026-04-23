@@ -10,6 +10,8 @@ import { BackgroundProvider } from "@/lib/backgroundContext";
 import { CustomizationProvider } from "@/lib/customizationContext";
 import { I18nProvider } from "@/lib/i18n";
 import { SessionTimerProvider } from "@/lib/sessionTimerContext";
+import { SecurityProvider } from "@/lib/securityContext";
+import SecurityHud from "@/components/SecurityHud";
 import BackgroundMusic from "@/components/BackgroundMusic";
 
 import NotFound from "@/pages/NotFound";
