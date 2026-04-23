@@ -81,7 +81,7 @@ export default function AppSidebar() {
   }, [user, collapsed, location.pathname]);
 
   return (
-    <aside className={`fixed ${posClass} top-0 h-screen ${width} bg-card border-${isRight ? "l" : "r"} border-border flex flex-col z-50 transition-all duration-300`}>
+    <aside className={`fixed ${posClass} top-0 h-screen ${width} bg-card border-${isRight ? "l" : "r"} border-border flex flex-col z-50 transition-[width] duration-150`}>
       <div className="p-4 border-b border-border flex items-center gap-2">
         <Shield className="w-5 h-5 text-primary shrink-0" />
         {!collapsed && <span className="font-mono text-sm font-bold text-primary neon-text">aeigsthub</span>}
@@ -95,7 +95,7 @@ export default function AppSidebar() {
         <button
           onClick={() => window.dispatchEvent(new CustomEvent("palette:toggle"))}
           title={collapsed ? "Hızlı ara (⌘K)" : undefined}
-          className={`w-full mb-2 flex items-center gap-2 px-3 py-2 rounded text-sm bg-secondary/40 hover:bg-secondary text-muted-foreground hover:text-foreground transition-all border border-border ${collapsed ? "justify-center" : ""}`}
+          className={`w-full mb-2 flex items-center gap-2 px-3 py-2 rounded text-sm bg-secondary/40 hover:bg-secondary text-muted-foreground hover:text-foreground border border-border ${collapsed ? "justify-center" : ""}`}
         >
           <Search className="w-4 h-4 shrink-0" />
           {!collapsed && (
@@ -110,17 +110,17 @@ export default function AppSidebar() {
           const active = location.pathname === link.to;
           const label = t(link.labelKey as any);
           return (
-            <button
+            <Link
               key={link.to}
-              onClick={() => navigate(link.to)}
+              to={link.to}
               title={collapsed ? label : undefined}
-              className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition-all ${
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm ${
                 active ? "bg-primary/10 text-primary neon-border" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
               } ${collapsed ? "justify-center" : ""}`}
             >
               <link.icon className="w-4 h-4 shrink-0" />
               {!collapsed && label}
-            </button>
+            </Link>
           );
         })}
         <button
