@@ -10,6 +10,8 @@ import { BackgroundProvider } from "@/lib/backgroundContext";
 import { CustomizationProvider } from "@/lib/customizationContext";
 import { I18nProvider } from "@/lib/i18n";
 import { SessionTimerProvider } from "@/lib/sessionTimerContext";
+import { SecurityProvider } from "@/lib/securityContext";
+import SecurityHud from "@/components/SecurityHud";
 import BackgroundMusic from "@/components/BackgroundMusic";
 
 import NotFound from "@/pages/NotFound";
@@ -21,6 +23,11 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "aeigsthub" },
       { name: "description", content: "aeigsthub — yeraltı pazarı operasyon paneli" },
+      { name: "referrer", content: "no-referrer" },
+      { name: "robots", content: "noindex,nofollow,noarchive,nosnippet" },
+      { httpEquiv: "X-Content-Type-Options", content: "nosniff" },
+      { httpEquiv: "X-Frame-Options", content: "DENY" },
+      { httpEquiv: "Permissions-Policy", content: "geolocation=(), camera=(), microphone=(), interest-cohort=()" },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
   }),
@@ -80,18 +87,21 @@ function RootComponent() {
       <TooltipProvider>
         <Sonner />
         <AuthProvider>
-          <SessionTimerProvider>
-            <I18nProvider>
-              <CustomizationProvider>
-                <BackgroundProvider>
-                  <AuthGuard>
-                    <Outlet />
-                  </AuthGuard>
-                  <BackgroundMusic />
-                </BackgroundProvider>
-              </CustomizationProvider>
-            </I18nProvider>
-          </SessionTimerProvider>
+          <SecurityProvider>
+            <SessionTimerProvider>
+              <I18nProvider>
+                <CustomizationProvider>
+                  <BackgroundProvider>
+                    <AuthGuard>
+                      <Outlet />
+                    </AuthGuard>
+                    <BackgroundMusic />
+                    <SecurityHud />
+                  </BackgroundProvider>
+                </CustomizationProvider>
+              </I18nProvider>
+            </SessionTimerProvider>
+          </SecurityProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

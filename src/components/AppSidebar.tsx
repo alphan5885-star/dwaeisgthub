@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/authContext";
 import { useCustomization } from "@/lib/customizationContext";
 import { useI18n } from "@/lib/i18n";
-import { useNavigate, useLocation } from "@/lib/router-shim";
+import { useNavigate, useLocation, Link } from "@/lib/router-shim";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, LayoutDashboard, ShoppingCart, Store, Wallet, FileWarning, ScrollText, LogOut, ArrowRightLeft, User, Package, Lock, Coins, MessageSquare, Palette, ShoppingBag, Bot, Heart, Search, Activity } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
@@ -69,7 +69,7 @@ export default function AppSidebar() {
 
   useEffect(() => {
     if (!user || collapsed) return;
-    (async () => {
+    const timer = setTimeout(async () => {
       const [{ data: notifs }, { count: orderCount }, { count: favCount }] = await Promise.all([
         supabase.from("notifications").select("id, title, created_at, link").eq("user_id", user.id).order("created_at", { ascending: false }).limit(3),
         supabase.from("orders").select("id", { count: "exact", head: true }).eq("buyer_id", user.id),
@@ -77,11 +77,12 @@ export default function AppSidebar() {
       ]);
       setActivity((notifs as any) || []);
       setStats({ orders: orderCount || 0, favs: favCount || 0 });
-    })();
+    }, 250);
+    return () => clearTimeout(timer);
   }, [user, collapsed, location.pathname]);
 
   return (
-    <aside className={`fixed ${posClass} top-0 h-screen ${width} bg-card border-${isRight ? "l" : "r"} border-border flex flex-col z-50 transition-all duration-300`}>
+    <aside className={`fixed ${posClass} top-0 h-screen ${width} bg-card border-${isRight ? "l" : "r"} border-border flex flex-col z-50 transition-[width] duration-150`}>
       <div className="p-4 border-b border-border flex items-center gap-2">
         <Shield className="w-5 h-5 text-primary shrink-0" />
         {!collapsed && <span className="font-mono text-sm font-bold text-primary neon-text">aeigsthub</span>}
@@ -95,7 +96,7 @@ export default function AppSidebar() {
         <button
           onClick={() => window.dispatchEvent(new CustomEvent("palette:toggle"))}
           title={collapsed ? "Hızlı ara (⌘K)" : undefined}
-          className={`w-full mb-2 flex items-center gap-2 px-3 py-2 rounded text-sm bg-secondary/40 hover:bg-secondary text-muted-foreground hover:text-foreground transition-all border border-border ${collapsed ? "justify-center" : ""}`}
+          className={`w-full mb-2 flex items-center gap-2 px-3 py-2 rounded text-sm bg-secondary/40 hover:bg-secondary text-muted-foreground hover:text-foreground border border-border ${collapsed ? "justify-center" : ""}`}
         >
           <Search className="w-4 h-4 shrink-0" />
           {!collapsed && (
@@ -110,17 +111,17 @@ export default function AppSidebar() {
           const active = location.pathname === link.to;
           const label = t(link.labelKey as any);
           return (
-            <button
+            <Link
               key={link.to}
-              onClick={() => navigate(link.to)}
+              to={link.to}
               title={collapsed ? label : undefined}
-              className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition-all ${
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm ${
                 active ? "bg-primary/10 text-primary neon-border" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
               } ${collapsed ? "justify-center" : ""}`}
             >
               <link.icon className="w-4 h-4 shrink-0" />
               {!collapsed && label}
-            </button>
+            </Link>
           );
         })}
         <button
