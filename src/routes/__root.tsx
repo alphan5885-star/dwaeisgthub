@@ -10,8 +10,6 @@ import { BackgroundProvider } from "@/lib/backgroundContext";
 import { CustomizationProvider } from "@/lib/customizationContext";
 import { I18nProvider } from "@/lib/i18n";
 import { SessionTimerProvider } from "@/lib/sessionTimerContext";
-import { SecurityProvider } from "@/lib/securityContext";
-import SecurityHud from "@/components/SecurityHud";
 import BackgroundMusic from "@/components/BackgroundMusic";
 
 import NotFound from "@/pages/NotFound";
@@ -23,11 +21,14 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "aeigsthub" },
       { name: "description", content: "aeigsthub — yeraltı pazarı operasyon paneli" },
-      { name: "referrer", content: "no-referrer" },
-      { name: "robots", content: "noindex,nofollow,noarchive,nosnippet" },
-      { httpEquiv: "X-Content-Type-Options", content: "nosniff" },
-      { httpEquiv: "X-Frame-Options", content: "DENY" },
-      { httpEquiv: "Permissions-Policy", content: "geolocation=(), camera=(), microphone=(), interest-cohort=()" },
+      { property: "og:title", content: "aeigsthub" },
+      { name: "twitter:title", content: "aeigsthub" },
+      { property: "og:description", content: "aeigsthub — yeraltı pazarı operasyon paneli" },
+      { name: "twitter:description", content: "aeigsthub — yeraltı pazarı operasyon paneli" },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/39fff387-d5a9-4961-ac6b-68eef8456ef7/id-preview-10b9bee3--48318aae-ceb9-46fe-8ef8-ce1a286d0f21.lovable.app-1776926657949.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/39fff387-d5a9-4961-ac6b-68eef8456ef7/id-preview-10b9bee3--48318aae-ceb9-46fe-8ef8-ce1a286d0f21.lovable.app-1776926657949.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:type", content: "website" },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
   }),
@@ -87,21 +88,18 @@ function RootComponent() {
       <TooltipProvider>
         <Sonner />
         <AuthProvider>
-          <SecurityProvider>
-            <SessionTimerProvider>
-              <I18nProvider>
-                <CustomizationProvider>
-                  <BackgroundProvider>
-                    <AuthGuard>
-                      <Outlet />
-                    </AuthGuard>
-                    <BackgroundMusic />
-                    <SecurityHud />
-                  </BackgroundProvider>
-                </CustomizationProvider>
-              </I18nProvider>
-            </SessionTimerProvider>
-          </SecurityProvider>
+          <SessionTimerProvider>
+            <I18nProvider>
+              <CustomizationProvider>
+                <BackgroundProvider>
+                  <AuthGuard>
+                    <Outlet />
+                  </AuthGuard>
+                  <BackgroundMusic />
+                </BackgroundProvider>
+              </CustomizationProvider>
+            </I18nProvider>
+          </SessionTimerProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
