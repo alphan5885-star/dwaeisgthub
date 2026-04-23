@@ -87,18 +87,21 @@ function RootComponent() {
       <TooltipProvider>
         <Sonner />
         <AuthProvider>
-          <SessionTimerProvider>
-            <I18nProvider>
-              <CustomizationProvider>
-                <BackgroundProvider>
-                  <AuthGuard>
-                    <Outlet />
-                  </AuthGuard>
-                  <BackgroundMusic />
-                </BackgroundProvider>
-              </CustomizationProvider>
-            </I18nProvider>
-          </SessionTimerProvider>
+          <SecurityProvider>
+            <SessionTimerProvider>
+              <I18nProvider>
+                <CustomizationProvider>
+                  <BackgroundProvider>
+                    <AuthGuard>
+                      <Outlet />
+                    </AuthGuard>
+                    <BackgroundMusic />
+                    <SecurityHud />
+                  </BackgroundProvider>
+                </CustomizationProvider>
+              </I18nProvider>
+            </SessionTimerProvider>
+          </SecurityProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
