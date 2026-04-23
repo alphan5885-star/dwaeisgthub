@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/authContext";
 import { useCustomization } from "@/lib/customizationContext";
 import { useI18n } from "@/lib/i18n";
-import { useNavigate, useLocation } from "@/lib/router-shim";
+import { useNavigate, useLocation, Link } from "@/lib/router-shim";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, LayoutDashboard, ShoppingCart, Store, Wallet, FileWarning, ScrollText, LogOut, ArrowRightLeft, User, Package, Lock, Coins, MessageSquare, Palette, ShoppingBag, Bot, Heart, Search, Activity } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
