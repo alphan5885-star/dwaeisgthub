@@ -34,7 +34,7 @@ export default function PageShell({ children }: { children: ReactNode }) {
       )}
       <AppSidebar />
       <SessionTimerBadge />
-      <main className={`${margin} p-6 relative z-10 transition-all duration-300`}>{children}</main>
+      <main className={`${margin} p-6 relative z-10 transition-[margin] duration-150`}>{children}</main>
       <KizilyurekAssistant
         position={isRight ? "bottom-right" : "bottom-left"}
         open={assistantOpen}
