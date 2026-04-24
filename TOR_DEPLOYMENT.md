@@ -4,6 +4,44 @@
 
 ---
 
+## ⚡ Hızlı başlangıç (otomatik)
+
+Hazır script'lerle:
+
+```bash
+# 1. Sunucuya Tor üzerinden bağlan
+torsocks ssh root@<sunucu>
+
+# 2. Tek komutla kur
+curl -fsSL https://raw.githubusercontent.com/<senin-repon>/main/scripts/deploy-tor.sh | bash
+# veya: bash scripts/deploy-tor.sh
+
+# 3. Lovable Cloud'dan veriyi taşı
+CLOUD_DB_URL='postgres://...' bash scripts/dump-cloud-db.sh
+bash scripts/restore-selfhost.sh cloud-dump-*.sql.gpg
+```
+
+Manuel kurulum için aşağıdaki adımları izle.
+
+---
+
+## VPS vs Raspberry Pi — Hangisi?
+
+| Kriter | VPS (Njalla/Cockbox) | Raspberry Pi (ev) |
+|--------|----------------------|-------------------|
+| **Maliyet** | ~10-30 €/ay (XMR) | Donanım ~70 € + elektrik |
+| **Hız** | Yüksek (1Gbps) | Ev internetine bağlı |
+| **Anonimlik** | Sağlayıcıya güven gerekir | Sadece Tor → IP hiç sızmaz |
+| **Fiziksel risk** | Sağlayıcı disk imajı alabilir | Evinde — fiziksel arama riski |
+| **Uptime** | %99.9 | Elektrik/internet kesintisi |
+| **Yedek** | Snapshot kolay | Disk/SD imajı manuel |
+| **Bandwidth** | Sınırsız (genelde) | ISP'nin upload limiti |
+| **Kim için?** | Yüksek trafik, küresel | Küçük topluluk, düşük profil |
+
+**Önerim:** Başlangıçta VPS (kolay), trafik artarsa kendi Pi/server (kontrol).
+
+---
+
 ## Mimari
 
 ```
