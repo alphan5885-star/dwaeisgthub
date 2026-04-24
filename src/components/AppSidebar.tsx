@@ -6,6 +6,7 @@ import { useNavigate, useLocation, Link } from "@/lib/router-shim";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, LayoutDashboard, ShoppingCart, Store, Wallet, FileWarning, ScrollText, LogOut, ArrowRightLeft, User, Package, Lock, Coins, MessageSquare, Palette, ShoppingBag, Bot, Heart, Search, Activity } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
+import TorBadge from "@/components/TorBadge";
 
 type LinkDef = { to: string; labelKey: string; icon: any };
 
@@ -171,7 +172,8 @@ export default function AppSidebar() {
         )}
       </nav>
 
-      <div className="p-3 border-t border-border">
+      <div className="p-3 border-t border-border space-y-2">
+        <TorBadge collapsed={collapsed} />
         {!collapsed && (
           <div className="flex items-center gap-2 mb-2">
             <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-mono text-primary">

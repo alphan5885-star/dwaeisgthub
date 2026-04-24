@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+/* Tor-ready: external font CDN kaldırıldı. System mono+sans stack kullanılıyor.
+   Self-host için font dosyalarını /public/fonts/ altına koyup @font-face ile yükleyebilirsin. */
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -11,8 +12,8 @@
  */
 
 @theme inline {
-  --font-sans: Inter, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

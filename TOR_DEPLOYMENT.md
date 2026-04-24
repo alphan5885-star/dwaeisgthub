@@ -4,6 +4,44 @@
 
 ---
 
+## ⚡ Hızlı başlangıç (otomatik)
+
+Hazır script'lerle:
+
+```bash
+# 1. Sunucuya Tor üzerinden bağlan
+torsocks ssh root@<sunucu>
+
+# 2. Tek komutla kur
+curl -fsSL https://raw.githubusercontent.com/<senin-repon>/main/scripts/deploy-tor.sh | bash
+# veya: bash scripts/deploy-tor.sh
+
+# 3. Lovable Cloud'dan veriyi taşı
+CLOUD_DB_URL='postgres://...' bash scripts/dump-cloud-db.sh
+bash scripts/restore-selfhost.sh cloud-dump-*.sql.gpg
+```
+
+Manuel kurulum için aşağıdaki adımları izle.
+
+---
+
+## VPS vs Raspberry Pi — Hangisi?
+
+| Kriter | VPS (Njalla/Cockbox) | Raspberry Pi (ev) |
+|--------|----------------------|-------------------|
+| **Maliyet** | ~10-30 €/ay (XMR) | Donanım ~70 € + elektrik |
+| **Hız** | Yüksek (1Gbps) | Ev internetine bağlı |
+| **Anonimlik** | Sağlayıcıya güven gerekir | Sadece Tor → IP hiç sızmaz |
+| **Fiziksel risk** | Sağlayıcı disk imajı alabilir | Evinde — fiziksel arama riski |
+| **Uptime** | %99.9 | Elektrik/internet kesintisi |
+| **Yedek** | Snapshot kolay | Disk/SD imajı manuel |
+| **Bandwidth** | Sınırsız (genelde) | ISP'nin upload limiti |
+| **Kim için?** | Yüksek trafik, küresel | Küçük topluluk, düşük profil |
+
+**Önerim:** Başlangıçta VPS (kolay), trafik artarsa kendi Pi/server (kontrol).
+
+---
+
 ## Mimari
 
 ```
@@ -214,3 +252,56 @@ Bu rehber **operasyonel güvenlik** ve **mahremiyet** için yazılmıştır (whi
 - [ ] Hiçbir external CDN / Google Fonts / harici çağrı
 - [ ] Log'lar kapalı, source map kapalı, server_tokens off
 - [ ] Yedek + panic prosedürü
+
+---
+
+## 11. Yaygın hatalar ve çözümleri
+
+| Hata | Sebep | Çözüm |
+|------|-------|-------|
+| `cat: hostname: No such file` | tor servis henüz hidden service üretmedi | `systemctl status tor` → 30sn bekle, log'a bak: `journalctl -u tor -n 50` |
+| `Permission denied: /var/lib/tor/aeigsth` | Yanlış sahiplik | `chown -R debian-tor:debian-tor /var/lib/tor/aeigsth && chmod 700 /var/lib/tor/aeigsth` |
+| `nginx: bind to 0.0.0.0:80 failed` | Apache veya başka servis 80'de | `lsof -i :80` ile bul, durdur. `listen 127.0.0.1:80` kullan. |
+| Tor Browser "Onion site not found" | torrc yanlış / tor restart edilmedi | `tor --verify-config` → `systemctl restart tor` |
+| `502 Bad Gateway` | Node app çalışmıyor | `pm2 status` → `pm2 logs aeigsth` |
+| Supabase `connection refused` | Docker container ayakta değil | `cd /opt/aeigsth/supabase/docker && docker compose ps` |
+| `.onion` çok yavaş | Normal — Tor 6 hop | Hidden Service Onionbalance ile load-balance et |
+| Build başarısız: `vite not found` | `npm install` yapılmadı | `cd /opt/aeigsth/app && npm install` |
+
+## 12. Logsuz monitoring
+
+Geleneksel monitoring (Datadog, Sentry, vb.) tüm anonimliği bozar. Sadece **lokal**:
+
+```bash
+# CPU/RAM
+htop
+
+# Bandwidth (IP'siz)
+vnstat -l -i eth0
+
+# Disk
+ncdu /
+
+# Tor circuit durumu
+nyx   # apt install nyx → grafiksel tor monitor
+
+# Uygulama (PM2)
+pm2 monit
+```
+
+`nyx` özellikle önemli: hidden service circuit'lerini, bant genişliği kullanımını gösterir, log dosyasına yazmaz.
+
+## 13. Acil panic
+
+```bash
+# /usr/local/bin/panic.sh
+#!/bin/bash
+systemctl stop tor nginx docker
+shred -uvz /var/lib/tor/aeigsth/hs_ed25519_*
+rm -rf /opt/aeigsth/app/.env /opt/aeigsth/supabase/docker/.env
+# Disk LUKS ise:
+cryptsetup luksErase /dev/sda2
+shutdown -h now
+```
+
+Sonra: `chmod 700 /usr/local/bin/panic.sh`. Uygulamadaki `PanicButton` bunu SSH üzerinden tetikleyebilir (ayrı bir webhook).

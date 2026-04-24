@@ -1,0 +1,27 @@
+# aeigsthub — Self-host .env şablonu
+# /opt/aeigsth/app/.env olarak kopyala ve değerleri doldur.
+
+# Self-hosted Supabase (Docker, varsayılan port 8000)
+VITE_SUPABASE_URL=http://127.0.0.1:8000
+
+# /opt/aeigsth/supabase/docker/.env içindeki ANON_KEY ile aynı olmalı
+VITE_SUPABASE_PUBLISHABLE_KEY=eyJ...REPLACE_ME
+
+VITE_SUPABASE_PROJECT_ID=selfhosted
+
+# Server-side (Node runtime için)
+SUPABASE_URL=http://127.0.0.1:8000
+SUPABASE_PUBLISHABLE_KEY=eyJ...REPLACE_ME
+SUPABASE_SERVICE_ROLE_KEY=eyJ...REPLACE_ME_SERVICE_ROLE
+
+# AI (Lovable AI Gateway yerine)
+OPENROUTER_API_KEY=sk-or-v1-REPLACE_ME
+# veya yerel Ollama:
+# OLLAMA_URL=http://127.0.0.1:11434
+
+# Blockchain API (Tor üzerinden çağrılacak)
+BLOCKCYPHER_TOKEN=REPLACE_ME
+
+# Tor SOCKS proxy (sabit)
+HTTP_PROXY=socks5://127.0.0.1:9050
+HTTPS_PROXY=socks5://127.0.0.1:9050
