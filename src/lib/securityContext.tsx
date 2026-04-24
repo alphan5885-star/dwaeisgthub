@@ -1,12 +1,17 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * SecurityProvider — istemci tarafı güvenlik katmanı.
  *
- * Not: Bu koruma katmanı kötü niyetli, teknik bilgili saldırganlara karşı
- * mutlak değildir; gerçek güvenlik sunucu tarafında (RLS + signature + reverse
- * proxy seviyesinde rate limit) yapılır. Burası UX katmanında saldırı yüzeyini
- * daraltır ve şüpheli davranışı tespit eder.
+ * Katmanlar:
+ *  - Devtools / WebDriver / headless tespiti
+ *  - Rapid-click bot koruması
+ *  - Aksiyon başına rate-limit (UI seviyesi)
+ *  - Anti-fingerprint shield (Canvas/WebGL/Audio noise injection)
+ *  - Session fingerprint (UA + lang + tz + screen) — değişirse otomatik logout
+ *  - Tor Browser tespiti
+ *  - Inactivity wipe (X dakika hareketsizlikte sessionStorage temizliği)
  */
 
 type ThreatLevel = "ok" | "warn" | "danger";
@@ -15,8 +20,9 @@ interface SecurityState {
   threatLevel: ThreatLevel;
   events: SecurityEvent[];
   blocked: boolean;
+  isTor: boolean;
+  fingerprintMismatch: boolean;
   unblock: () => void;
-  /** Bir eylemi rate-limit'e tabi tut. true dönerse devam edebilirsin. */
   guard: (action: string, maxPerMinute?: number) => boolean;
 }
 
@@ -33,13 +39,111 @@ const Ctx = createContext<SecurityState | null>(null);
 const RAPID_CLICK_WINDOW = 1000;
 const RAPID_CLICK_THRESHOLD = 12;
 const BLOCK_DURATION_MS = 15_000;
+const FP_KEY = "__sec_fp_v1";
+const INACTIVITY_MS = 15 * 60 * 1000; // 15dk
+
+/* ------------------------- helpers ------------------------- */
+
+async function computeFingerprint(): Promise<string> {
+  if (typeof window === "undefined") return "ssr";
+  const parts = [
+    navigator.userAgent,
+    navigator.language,
+    (navigator.languages || []).join(","),
+    `${screen.width}x${screen.height}x${screen.colorDepth}`,
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+    String(navigator.hardwareConcurrency || 0),
+    String((navigator as any).deviceMemory || 0),
+  ].join("|");
+  const buf = new TextEncoder().encode(parts);
+  const hash = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** Tor Browser heuristic. Kesin değil ama iyi bir tahmin. */
+function detectTor(): boolean {
+  if (typeof window === "undefined") return false;
+  // .onion zaten kesin
+  if (window.location.hostname.endsWith(".onion")) return true;
+  // Tor Browser: timezone UTC, no battery API, resistFingerprinting → screen 1000x1000 multiples
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const noBattery = !("getBattery" in navigator);
+  const tzUtc = tz === "UTC" || tz === "Atlantic/Reykjavik" || tz === "Etc/UTC";
+  const roundedScreen = screen.width % 100 === 0 && screen.height % 100 === 0;
+  const score = (tzUtc ? 1 : 0) + (noBattery ? 1 : 0) + (roundedScreen ? 1 : 0);
+  return score >= 2;
+}
+
+/** Canvas / WebGL / Audio fingerprinting karşı önlemleri (noise injection). */
+function installAntiFingerprint() {
+  if (typeof window === "undefined") return;
+  if ((window as any).__afp_installed) return;
+  (window as any).__afp_installed = true;
+
+  try {
+    const proto = HTMLCanvasElement.prototype as any;
+    const origToDataURL = proto.toDataURL;
+    proto.toDataURL = function (...args: any[]) {
+      try {
+        const ctx = this.getContext("2d");
+        if (ctx) {
+          // 1px görünmez gürültü
+          const noise = Math.floor(Math.random() * 10);
+          ctx.fillStyle = `rgba(${noise},${noise},${noise},0.01)`;
+          ctx.fillRect(0, 0, 1, 1);
+        }
+      } catch {}
+      return origToDataURL.apply(this, args);
+    };
+
+    const origGetImageData = CanvasRenderingContext2D.prototype.getImageData;
+    CanvasRenderingContext2D.prototype.getImageData = function (sx, sy, sw, sh) {
+      const data = origGetImageData.call(this, sx, sy, sw, sh);
+      // 50 pikselde bir 1 bit gürültü
+      for (let i = 0; i < data.data.length; i += 50 * 4) {
+        data.data[i] = data.data[i] ^ 1;
+      }
+      return data;
+    };
+  } catch {}
+
+  try {
+    const wgl = WebGLRenderingContext.prototype.getParameter;
+    WebGLRenderingContext.prototype.getParameter = function (param: number) {
+      // VENDOR (0x1F00), RENDERER (0x1F01), UNMASKED_VENDOR (0x9245), UNMASKED_RENDERER (0x9246)
+      if (param === 0x1f00 || param === 0x9245) return "Generic";
+      if (param === 0x1f01 || param === 0x9246) return "Generic Renderer";
+      return wgl.call(this, param);
+    };
+  } catch {}
+
+  try {
+    const ac = (window as any).AudioBuffer?.prototype;
+    if (ac?.getChannelData) {
+      const orig = ac.getChannelData;
+      ac.getChannelData = function (ch: number) {
+        const data = orig.call(this, ch);
+        // Çok küçük gürültü
+        for (let i = 0; i < data.length; i += 1000) {
+          data[i] = data[i] + (Math.random() - 0.5) * 1e-7;
+        }
+        return data;
+      };
+    }
+  } catch {}
+}
+
+/* ------------------------- provider ------------------------- */
 
 export function SecurityProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<SecurityEvent[]>([]);
   const [threatLevel, setThreatLevel] = useState<ThreatLevel>("ok");
   const [blocked, setBlocked] = useState(false);
+  const [isTor, setIsTor] = useState(false);
+  const [fingerprintMismatch, setFingerprintMismatch] = useState(false);
   const clickTimes = useRef<number[]>([]);
   const actionBuckets = useRef<Map<string, number[]>>(new Map());
+  const lastActivity = useRef<number>(Date.now());
 
   const log = (type: string, level: ThreatLevel, detail?: string) => {
     const ev: SecurityEvent = {
@@ -67,6 +171,60 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
     actionBuckets.current.set(action, fresh);
     return true;
   };
+
+  // Anti-fingerprint shield (mount'ta kur)
+  useEffect(() => {
+    installAntiFingerprint();
+  }, []);
+
+  // Tor detection + fingerprint check + inactivity wipe
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setIsTor(detectTor());
+
+    (async () => {
+      try {
+        const fp = await computeFingerprint();
+        const stored = localStorage.getItem(FP_KEY);
+        if (!stored) {
+          localStorage.setItem(FP_KEY, fp);
+        } else if (stored !== fp) {
+          log("fingerprint_change", "danger", "Cihaz/parmak izi değişti — oturum sonlandırıldı");
+          setFingerprintMismatch(true);
+          // Otomatik logout
+          try {
+            await supabase.auth.signOut();
+          } catch {}
+          localStorage.setItem(FP_KEY, fp);
+        }
+      } catch {}
+    })();
+
+    const onActivity = () => {
+      lastActivity.current = Date.now();
+    };
+    ["mousemove", "keydown", "click", "touchstart"].forEach((e) =>
+      window.addEventListener(e, onActivity, { passive: true }),
+    );
+
+    const inactivityTimer = setInterval(async () => {
+      if (Date.now() - lastActivity.current > INACTIVITY_MS) {
+        log("inactivity_wipe", "warn", `${INACTIVITY_MS / 60000}dk hareketsizlik`);
+        try {
+          sessionStorage.clear();
+          await supabase.auth.signOut();
+        } catch {}
+        lastActivity.current = Date.now();
+      }
+    }, 30_000);
+
+    return () => {
+      ["mousemove", "keydown", "click", "touchstart"].forEach((e) =>
+        window.removeEventListener(e, onActivity),
+      );
+      clearInterval(inactivityTimer);
+    };
+  }, []);
 
   // Devtools detection (timing-based, debugger trap)
   useEffect(() => {
@@ -148,7 +306,7 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{ threatLevel, events, blocked, unblock, guard }}>
+    <Ctx.Provider value={{ threatLevel, events, blocked, isTor, fingerprintMismatch, unblock, guard }}>
       {children}
     </Ctx.Provider>
   );
