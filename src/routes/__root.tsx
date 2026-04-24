@@ -10,7 +10,10 @@ import { BackgroundProvider } from "@/lib/backgroundContext";
 import { CustomizationProvider } from "@/lib/customizationContext";
 import { I18nProvider } from "@/lib/i18n";
 import { SessionTimerProvider } from "@/lib/sessionTimerContext";
+import { SecurityProvider } from "@/lib/securityContext";
 import BackgroundMusic from "@/components/BackgroundMusic";
+import SecurityHud from "@/components/SecurityHud";
+import TorWarningBanner from "@/components/TorWarningBanner";
 
 import NotFound from "@/pages/NotFound";
 
@@ -92,18 +95,22 @@ function RootComponent() {
       <TooltipProvider>
         <Sonner />
         <AuthProvider>
-          <SessionTimerProvider>
-            <I18nProvider>
-              <CustomizationProvider>
-                <BackgroundProvider>
-                  <AuthGuard>
-                    <Outlet />
-                  </AuthGuard>
-                  <BackgroundMusic />
-                </BackgroundProvider>
-              </CustomizationProvider>
-            </I18nProvider>
-          </SessionTimerProvider>
+          <SecurityProvider>
+            <SessionTimerProvider>
+              <I18nProvider>
+                <CustomizationProvider>
+                  <BackgroundProvider>
+                    <TorWarningBanner />
+                    <AuthGuard>
+                      <Outlet />
+                    </AuthGuard>
+                    <SecurityHud />
+                    <BackgroundMusic />
+                  </BackgroundProvider>
+                </CustomizationProvider>
+              </I18nProvider>
+            </SessionTimerProvider>
+          </SecurityProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
