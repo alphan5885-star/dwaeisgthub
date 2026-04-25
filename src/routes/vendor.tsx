@@ -1,11 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import VendorDashboard from "@/pages/VendorDashboard";
 import { Protected } from "@/lib/Protected";
 
-export const Route = createFileRoute("/vendor")({
-  component: () => (
+function VendorRoutePage() {
+  const { pathname } = useLocation();
+
+  return (
     <Protected roles={["vendor", "admin"]}>
-      <VendorDashboard />
+      {pathname === "/vendor" ? <VendorDashboard /> : <Outlet />}
     </Protected>
-  ),
+  );
+}
+
+export const Route = createFileRoute("/vendor")({
+  component: VendorRoutePage,
 });
