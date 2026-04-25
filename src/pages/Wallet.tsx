@@ -33,7 +33,7 @@ function fmtCountdown(ms: number) {
 
 export default function Wallet() {
   const { user } = useAuth();
-  const key = user ? `${STORAGE_PREFIX}${user.id}` : "";
+  const key = user ? `${STORAGE_PREFIX_LTC}${user.id}` : "";
   const [address, setAddress] = useState<string | null>(null);
   const [createdAt, setCreatedAt] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
