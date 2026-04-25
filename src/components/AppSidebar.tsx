@@ -92,7 +92,7 @@ export default function AppSidebar() {
   }, [user, collapsed, location.pathname]);
 
   return (
-    <aside className={`fixed ${posClass} top-0 h-screen ${width} bg-card border-${isRight ? "l" : "r"} border-border flex flex-col z-50 transition-[width] duration-150`}>
+    <aside className={`fixed ${posClass} top-0 h-screen ${width} bg-card ${isRight ? "border-l" : "border-r"} border-border flex flex-col z-50 transition-[width] duration-150`}>
       <div className="p-4 border-b border-border flex items-center gap-2">
         <Shield className="w-5 h-5 text-primary shrink-0" />
         {!collapsed && <span className="font-mono text-sm font-bold text-primary neon-text">aeigsthub</span>}

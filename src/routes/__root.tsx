@@ -46,7 +46,7 @@ export const Route = createRootRoute({
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="tr" className="dark">
+    <html lang="tr" className="dark bg-background">
       <head>
         <HeadContent />
       </head>
