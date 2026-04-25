@@ -133,6 +133,27 @@
     border: 1px solid hsl(var(--border));
     backdrop-filter: blur(4px);
   }
+  .cyber-grid {
+    background-image: 
+      linear-gradient(rgba(255,0,51,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,0,51,0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+  .status-online {
+    position: relative;
+  }
+  .status-online::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 4px;
+    background: #22c55e;
+    border-radius: 50%;
+  }
+  
 }
 
 .no-neon .neon-text { text-shadow: none !important; }

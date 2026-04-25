@@ -128,8 +128,9 @@ export default function ProductDetail() {
               </div>
               <div className="text-right">
                 <div className="text-sm font-mono text-muted-foreground line-through">{product.price} LTC</div>
-                <div className="text-2xl font-mono font-bold text-primary neon-text">{totalPrice.toFixed(4)} LTC</div>
-                <div className="text-[10px] font-mono text-yellow-500 mt-0.5">+%{(SERVICE_FEE_RATE * 100).toFixed(0)} Hizmet ({serviceFee.toFixed(4)} LTC)</div>
+                <div className="text-xl font-mono font-bold text-foreground">{totalPrice.toFixed(4)} LTC</div>
+                <div className="text-sm font-mono text-orange-400">{(totalPrice * 0.62).toFixed(4)} XMR</div>
+                <div className="text-[10px] font-mono text-muted-foreground mt-0.5">+%{(SERVICE_FEE_RATE * 100).toFixed(0)} escrow</div>
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono mt-1 ${product.type === "digital" ? "bg-blue-500/10 text-blue-400" : "bg-orange-500/10 text-orange-400"}`}>
                   {product.type === "digital" ? <Key className="w-3 h-3" /> : <Package className="w-3 h-3" />}
                   {product.type.toUpperCase()}
@@ -209,7 +210,7 @@ export default function ProductDetail() {
                   disabled={!captchaOk || creating}
                   className="w-full flex items-center justify-center gap-2 py-3.5 bg-primary text-primary-foreground rounded-lg font-mono font-bold neon-glow-btn text-sm disabled:opacity-50"
                 >
-                  <ShoppingCart className="w-4 h-4" /> {creating ? "Hazırlanıyor..." : `SATIN AL — ${totalPrice.toFixed(4)} LTC`}
+                  <ShoppingCart className="w-4 h-4" /> {creating ? "Hazırlanıyor..." : `SATIN AL — ${totalPrice.toFixed(4)} LTC / ${(totalPrice * 0.62).toFixed(4)} XMR`}
                 </motion.button>
               </>
             )}
