@@ -79,23 +79,30 @@ export default function Market() {
 
   return (
     <PageShell>
-      {/* Live Stats Banner */}
-      <div className="glass-card neon-border rounded-lg p-3 mb-6 scan-line">
+      {/* Status Bar */}
+      <div className="glass-card rounded-lg p-3 mb-6 border-l-2 border-l-primary">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-primary" />
-            <span className="font-mono text-sm font-bold text-primary neon-text glitch-text">aeigsthub</span>
-            <span className="w-2 h-2 bg-green-500 rounded-full pulse-dot" />
-            <span className="text-[10px] font-mono text-green-500">ONLINE</span>
+          <div className="flex items-center gap-3">
+            <Shield className="w-4 h-4 text-primary" />
+            <span className="font-mono text-sm font-bold text-foreground">aeigsthub</span>
+            <div className="flex items-center gap-1.5 bg-green-500/10 px-2 py-0.5 rounded">
+              <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+              <span className="text-[10px] font-mono text-green-500">AKTIF</span>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             {stats.map((s, i) => (
               <div key={i} className="flex items-center gap-1.5">
-                <s.icon className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-xs font-mono text-muted-foreground">{s.label}:</span>
-                <span className="text-xs font-mono font-bold text-primary">{s.value}</span>
+                <s.icon className="w-3 h-3 text-muted-foreground" />
+                <span className="text-[10px] font-mono text-muted-foreground">{s.label}</span>
+                <span className="text-xs font-mono font-bold text-foreground">{s.value}</span>
               </div>
             ))}
+            <div className="flex items-center gap-1 text-[10px] font-mono text-orange-400">
+              <span>XMR</span>
+              <span className="text-muted-foreground">/</span>
+              <span className="text-blue-400">LTC</span>
+            </div>
           </div>
         </div>
       </div>
@@ -176,15 +183,7 @@ export default function Market() {
               onClick={() => navigate(`/product/${p.id}`)}
               className="glass-card rounded-lg overflow-hidden cursor-pointer hover:neon-border transition-all group relative"
             >
-              {/* Verified badge for digital products */}
-              {p.type === "digital" && (
-                <div className="absolute top-2 right-10 z-10">
-                  <div className="bg-blue-500/20 border border-blue-500/30 rounded px-1.5 py-0.5 flex items-center gap-1">
-                    <Shield className="w-2.5 h-2.5 text-blue-400" />
-                    <span className="text-[8px] font-mono text-blue-400">VERIFIED</span>
-                  </div>
-                </div>
-              )}
+              
               <div className="aspect-[4/3] bg-secondary flex items-center justify-center overflow-hidden relative">
                 {p.image_url ? (
                   <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -229,9 +228,9 @@ export default function Market() {
                 </button>
 
                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-mono font-bold text-primary neon-text">{totalPrice.toFixed(4)} LTC</span>
-                    <span className="text-[9px] font-mono text-muted-foreground">+%5 escrow</span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-mono font-bold text-foreground">{totalPrice.toFixed(4)} LTC</span>
+                    <span className="text-[10px] font-mono text-orange-400">{(totalPrice * 0.62).toFixed(4)} XMR</span>
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <span className={`flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded ${

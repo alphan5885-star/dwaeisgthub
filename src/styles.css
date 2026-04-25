@@ -166,16 +166,7 @@
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.5; transform: scale(1.2); }
   }
-  .glitch-text {
-    animation: glitch 3s infinite;
-  }
-  @keyframes glitch {
-    0%, 90%, 100% { transform: translate(0); }
-    92% { transform: translate(-2px, 1px); }
-    94% { transform: translate(2px, -1px); }
-    96% { transform: translate(-1px, -1px); }
-    98% { transform: translate(1px, 1px); }
-  }
+  
 }
 
 .no-neon .neon-text { text-shadow: none !important; }

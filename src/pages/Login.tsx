@@ -292,17 +292,24 @@ export default function Login() {
           </motion.button>
         </form>
 
-        <div className="mt-6 glass-card rounded-lg p-3 opacity-60">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 rounded-full bg-red-500" />
-            <div className="w-2 h-2 rounded-full bg-yellow-500" />
-            <div className="w-2 h-2 rounded-full bg-green-500" />
-            <span className="text-[9px] font-mono text-muted-foreground ml-2">system_status.sh</span>
-          </div>
-          <div className="text-[9px] font-mono text-muted-foreground space-y-0.5">
-            <div><span className="text-green-500">$</span> uptime: 99.97% | nodes: 3</div>
-            <div><span className="text-green-500">$</span> encryption: AES-256-GCM</div>
-            <div><span className="text-green-500">$</span> escrow: active | 2fa: enabled</div>
+        <div className="mt-6 glass-card rounded-lg p-4">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-[10px] font-mono text-muted-foreground mb-1">Sifreleme</div>
+              <div className="text-xs font-mono text-foreground">AES-256</div>
+            </div>
+            <div>
+              <div className="text-[10px] font-mono text-muted-foreground mb-1">Odeme</div>
+              <div className="text-xs font-mono">
+                <span className="text-orange-400">XMR</span>
+                <span className="text-muted-foreground mx-1">/</span>
+                <span className="text-blue-400">LTC</span>
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] font-mono text-muted-foreground mb-1">Escrow</div>
+              <div className="text-xs font-mono text-green-500">Aktif</div>
+            </div>
           </div>
         </div>
       </motion.div>
