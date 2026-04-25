@@ -71,7 +71,27 @@ export default function EncryptedChat({ orderId, otherUserId }: Props) {
   const [messages, setMessages] = useState<MessageRow[]>([]);
   const [newMsg, setNewMsg] = useState("");
   const [sending, setSending] = useState(false);
+  const [pgpKeys, setPgpKeys] = useState<Record<string, PgpKeyRow>>({});
+  const [keysLoading, setKeysLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!user?.id || !otherUserId) return;
+    const loadKeys = async () => {
+      setKeysLoading(true);
+      const { data } = await supabase
+        .from("user_pgp_keys")
+        .select("user_id, public_key, fingerprint")
+        .in("user_id", [user.id, otherUserId]);
+      const next: Record<string, PgpKeyRow> = {};
+      (data || []).forEach((key: any) => {
+        next[key.user_id] = key;
+      });
+      setPgpKeys(next);
+      setKeysLoading(false);
+    };
+    loadKeys();
+  }, [user?.id, otherUserId]);
 
   useEffect(() => {
     if (!orderId) return;
@@ -85,7 +105,9 @@ export default function EncryptedChat({ orderId, otherUserId }: Props) {
         const decrypted = await Promise.all(
           data.map(async (m: any) => ({
             ...m,
-            decrypted: await decryptMessage(m.encrypted_text, m.iv, orderId, user?.id || "", otherUserId),
+            decrypted: m.ciphertext?.startsWith("-----BEGIN PGP MESSAGE-----")
+              ? "[PGP ciphertext — özel anahtarla dışarıda çözülür]"
+              : await decryptMessage(m.ciphertext, m.iv, orderId, user?.id || "", otherUserId),
           }))
         );
         setMessages(decrypted);
@@ -99,14 +121,16 @@ export default function EncryptedChat({ orderId, otherUserId }: Props) {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "encrypted_messages", filter: `order_id=eq.${orderId}` },
         async (payload) => {
           const m = payload.new as any;
-          const decrypted = await decryptMessage(m.encrypted_text, m.iv, orderId, user?.id || "", otherUserId);
+          const decrypted = m.ciphertext?.startsWith("-----BEGIN PGP MESSAGE-----")
+            ? "[PGP ciphertext — özel anahtarla dışarıda çözülür]"
+            : await decryptMessage(m.ciphertext, m.iv, orderId, user?.id || "", otherUserId);
           setMessages((prev) => [...prev, { ...m, decrypted }]);
         }
       )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [orderId]);
+  }, [orderId, otherUserId, user?.id]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
