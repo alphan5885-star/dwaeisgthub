@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/authContext";
 import { useCustomization } from "@/lib/customizationContext";
 import { useI18n } from "@/lib/i18n";
@@ -53,6 +53,14 @@ const buyerLinks: LinkDef[] = [
   { to: "/customization", labelKey: "customize", icon: Palette },
 ];
 
+function getLaunchCountdown() {
+  const now = new Date();
+  const launch = new Date(now.getFullYear(), 4, 10, 0, 0, 0);
+  if (now > launch) launch.setFullYear(now.getFullYear() + 1);
+  const days = Math.max(0, Math.ceil((launch.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+  return days;
+}
+
 export default function AppSidebar() {
   const { role, user, logout } = useAuth();
   const { settings } = useCustomization();
@@ -61,6 +69,7 @@ export default function AppSidebar() {
   const location = useLocation();
   const [activity, setActivity] = useState<{ id: string; title: string; created_at: string; link?: string | null }[]>([]);
   const [stats, setStats] = useState<{ orders: number; favs: number }>({ orders: 0, favs: 0 });
+  const launchDays = useMemo(() => getLaunchCountdown(), []);
 
   const links = role === "admin" ? adminLinks : role === "vendor" ? vendorLinks : buyerLinks;
   const collapsed = settings.sidebarCollapsed;
@@ -174,6 +183,18 @@ export default function AppSidebar() {
 
       <div className="p-3 border-t border-border space-y-2">
         <TorBadge collapsed={collapsed} />
+        {!collapsed && (
+          <div className="rounded border border-primary/30 bg-primary/5 px-3 py-2 font-mono">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[9px] uppercase text-muted-foreground">Tor lansman</span>
+              <span className="text-[9px] text-primary">10 Mayıs</span>
+            </div>
+            <div className="mt-1 flex items-end justify-between gap-2">
+              <span className="text-lg font-bold leading-none text-primary neon-text">{launchDays}</span>
+              <span className="text-[10px] text-muted-foreground">gün kaldı</span>
+            </div>
+          </div>
+        )}
         {!collapsed && (
           <div className="flex items-center gap-2 mb-2">
             <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-mono text-primary">
