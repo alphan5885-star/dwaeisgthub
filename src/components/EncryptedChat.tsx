@@ -2,17 +2,24 @@ import { useState, useEffect, useRef } from "react";
 import PageShell from "@/components/PageShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/authContext";
-import { Lock, Send, Loader2 } from "lucide-react";
+import { Lock, Send, Loader2, KeyRound, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
+import { encryptForRecipients } from "@/lib/pgp";
 
 interface MessageRow {
   id: string;
   sender_id: string;
   receiver_id: string;
-  encrypted_text: string;
+  ciphertext: string;
   iv: string;
   created_at: string;
   decrypted?: string;
+}
+
+interface PgpKeyRow {
+  user_id: string;
+  public_key: string;
+  fingerprint: string;
 }
 
 // Per-conversation key derivation using PBKDF2 from order ID + user IDs
