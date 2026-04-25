@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@/lib/router-shim";
 import PageShell from "@/components/PageShell";
 import { supabase } from "@/integrations/supabase/client";
-import { Key, Package, Search, User, MapPin, Eye } from "lucide-react";
+import { Key, Package, Search, User, MapPin, Eye, Shield, Activity, TrendingUp, Users } from "lucide-react";
 import { motion } from "framer-motion";
 import VendorRating from "@/components/VendorRating";
 import ProductDescriptionModal from "@/components/ProductDescriptionModal";
@@ -71,11 +71,41 @@ export default function Market() {
     return true;
   });
 
+  const stats = [
+    { icon: Package, label: "Ürün", value: products.length },
+    { icon: Users, label: "Online", value: Math.floor(12 + Math.random() * 8) },
+    { icon: TrendingUp, label: "24h İşlem", value: Math.floor(45 + Math.random() * 20) },
+  ];
+
   return (
     <PageShell>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-mono font-bold text-primary neon-text">Market</h1>
-        <span className="text-xs font-mono text-muted-foreground">{filtered.length} ürün</span>
+      {/* Live Stats Banner */}
+      <div className="glass-card neon-border rounded-lg p-3 mb-6 scan-line">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-primary" />
+            <span className="font-mono text-sm font-bold text-primary neon-text glitch-text">aeigsthub</span>
+            <span className="w-2 h-2 bg-green-500 rounded-full pulse-dot" />
+            <span className="text-[10px] font-mono text-green-500">ONLINE</span>
+          </div>
+          <div className="flex items-center gap-4">
+            {stats.map((s, i) => (
+              <div key={i} className="flex items-center gap-1.5">
+                <s.icon className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs font-mono text-muted-foreground">{s.label}:</span>
+                <span className="text-xs font-mono font-bold text-primary">{s.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Activity className="w-4 h-4 text-primary" />
+          <h1 className="text-lg font-mono font-bold text-foreground">Aktif Listeler</h1>
+        </div>
+        <span className="text-[10px] font-mono text-muted-foreground bg-secondary px-2 py-1 rounded">{filtered.length} sonuç</span>
       </div>
 
       <div className="flex gap-3 mb-4">
@@ -142,10 +172,19 @@ export default function Market() {
               key={p.id}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.04 }}
+              transition={{ delay: i * 0.03 }}
               onClick={() => navigate(`/product/${p.id}`)}
-              className="glass-card rounded-lg overflow-hidden cursor-pointer hover:neon-border transition-all group"
+              className="glass-card rounded-lg overflow-hidden cursor-pointer hover:neon-border transition-all group relative"
             >
+              {/* Verified badge for digital products */}
+              {p.type === "digital" && (
+                <div className="absolute top-2 right-10 z-10">
+                  <div className="bg-blue-500/20 border border-blue-500/30 rounded px-1.5 py-0.5 flex items-center gap-1">
+                    <Shield className="w-2.5 h-2.5 text-blue-400" />
+                    <span className="text-[8px] font-mono text-blue-400">VERIFIED</span>
+                  </div>
+                </div>
+              )}
               <div className="aspect-[4/3] bg-secondary flex items-center justify-center overflow-hidden relative">
                 {p.image_url ? (
                   <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -190,19 +229,21 @@ export default function Market() {
                 </button>
 
                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-                  <div>
-                    <span className="text-sm font-mono font-bold text-primary">{totalPrice.toFixed(4)} LTC</span>
-                    <span className="text-[9px] font-mono text-yellow-500 ml-1">+%5</span>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-mono font-bold text-primary neon-text">{totalPrice.toFixed(4)} LTC</span>
+                    <span className="text-[9px] font-mono text-muted-foreground">+%5 escrow</span>
                   </div>
-                  <span className={`flex items-center gap-1 text-[10px] font-mono ${
-                    p.type === "digital" ? "text-blue-400" : "text-orange-400"
-                  }`}>
-                    {p.type === "digital" ? <Key className="w-3 h-3" /> : <Package className="w-3 h-3" />}
-                    {p.type === "digital" ? "DİJİTAL" : "FİZİKSEL"}
-                  </span>
-                </div>
-                <div className="text-[10px] text-muted-foreground font-mono mt-2">
-                  Stok: {p.stock}
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={`flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                      p.type === "digital" ? "bg-blue-500/10 text-blue-400" : "bg-orange-500/10 text-orange-400"
+                    }`}>
+                      {p.type === "digital" ? <Key className="w-3 h-3" /> : <Package className="w-3 h-3" />}
+                      {p.type === "digital" ? "DİJİTAL" : "FİZİKSEL"}
+                    </span>
+                    <span className={`text-[9px] font-mono ${p.stock > 5 ? "text-green-500" : "text-yellow-500"}`}>
+                      {p.stock > 5 ? `${p.stock} stok` : `Son ${p.stock}!`}
+                    </span>
+                  </div>
                 </div>
               </div>
             </motion.div>

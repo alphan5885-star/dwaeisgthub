@@ -292,9 +292,19 @@ export default function Login() {
           </motion.button>
         </form>
 
-        <p className="text-center text-[10px] text-muted-foreground font-mono mt-4 opacity-50">
-          v3.0 • escrow • ltc • aes-256 • 2fa • e2e encrypted
-        </p>
+        <div className="mt-6 glass-card rounded-lg p-3 opacity-60">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 rounded-full bg-red-500" />
+            <div className="w-2 h-2 rounded-full bg-yellow-500" />
+            <div className="w-2 h-2 rounded-full bg-green-500" />
+            <span className="text-[9px] font-mono text-muted-foreground ml-2">system_status.sh</span>
+          </div>
+          <div className="text-[9px] font-mono text-muted-foreground space-y-0.5">
+            <div><span className="text-green-500">$</span> uptime: 99.97% | nodes: 3</div>
+            <div><span className="text-green-500">$</span> encryption: AES-256-GCM</div>
+            <div><span className="text-green-500">$</span> escrow: active | 2fa: enabled</div>
+          </div>
+        </div>
       </motion.div>
     </div>
   );

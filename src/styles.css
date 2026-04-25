@@ -133,6 +133,49 @@
     border: 1px solid hsl(var(--border));
     backdrop-filter: blur(4px);
   }
+  .cyber-grid {
+    background-image: 
+      linear-gradient(rgba(255,0,51,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,0,51,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .scan-line {
+    position: relative;
+    overflow: hidden;
+  }
+  .scan-line::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, hsl(349 100% 50% / 0.5), transparent);
+    animation: scan 3s linear infinite;
+  }
+  @keyframes scan {
+    0% { top: 0; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+  .pulse-dot {
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+  }
+  .glitch-text {
+    animation: glitch 3s infinite;
+  }
+  @keyframes glitch {
+    0%, 90%, 100% { transform: translate(0); }
+    92% { transform: translate(-2px, 1px); }
+    94% { transform: translate(2px, -1px); }
+    96% { transform: translate(-1px, -1px); }
+    98% { transform: translate(1px, 1px); }
+  }
 }
 
 .no-neon .neon-text { text-shadow: none !important; }
