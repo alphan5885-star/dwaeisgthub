@@ -135,36 +135,23 @@
   }
   .cyber-grid {
     background-image: 
-      linear-gradient(rgba(255,0,51,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,0,51,0.04) 1px, transparent 1px);
-    background-size: 40px 40px;
+      linear-gradient(rgba(255,0,51,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,0,51,0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
   }
-  .scan-line {
+  .status-online {
     position: relative;
-    overflow: hidden;
   }
-  .scan-line::after {
+  .status-online::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, hsl(349 100% 50% / 0.5), transparent);
-    animation: scan 3s linear infinite;
-  }
-  @keyframes scan {
-    0% { top: 0; opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { top: 100%; opacity: 0; }
-  }
-  .pulse-dot {
-    animation: pulse-dot 2s ease-in-out infinite;
-  }
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(1.2); }
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 4px;
+    background: #22c55e;
+    border-radius: 50%;
   }
   
 }

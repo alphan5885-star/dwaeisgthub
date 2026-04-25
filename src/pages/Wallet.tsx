@@ -6,7 +6,8 @@ import { QRCodeCanvas } from "qrcode.react";
 import { Copy, RefreshCw, AlertTriangle, Info, Clock } from "lucide-react";
 import { toast } from "sonner";
 
-const STORAGE_PREFIX = "ltc_addr_";
+const STORAGE_PREFIX_LTC = "ltc_addr_";
+const STORAGE_PREFIX_XMR = "xmr_addr_";
 const VALID_MS = 24 * 60 * 60 * 1000;
 
 function generateLtcAddress(): string {
@@ -14,6 +15,13 @@ function generateLtcAddress(): string {
   crypto.getRandomValues(bytes);
   const hex = Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
   return `ltc1q${hex}`;
+}
+
+function generateXmrAddress(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  const hex = Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return `4${hex}`;
 }
 
 function fmtCountdown(ms: number) {
