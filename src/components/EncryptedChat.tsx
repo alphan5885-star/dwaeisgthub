@@ -2,17 +2,24 @@ import { useState, useEffect, useRef } from "react";
 import PageShell from "@/components/PageShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/authContext";
-import { Lock, Send, Loader2 } from "lucide-react";
+import { Lock, Send, Loader2, KeyRound, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
+import { encryptForRecipients } from "@/lib/pgp";
 
 interface MessageRow {
   id: string;
   sender_id: string;
   receiver_id: string;
-  encrypted_text: string;
+  ciphertext: string;
   iv: string;
   created_at: string;
   decrypted?: string;
+}
+
+interface PgpKeyRow {
+  user_id: string;
+  public_key: string;
+  fingerprint: string;
 }
 
 // Per-conversation key derivation using PBKDF2 from order ID + user IDs
@@ -64,7 +71,27 @@ export default function EncryptedChat({ orderId, otherUserId }: Props) {
   const [messages, setMessages] = useState<MessageRow[]>([]);
   const [newMsg, setNewMsg] = useState("");
   const [sending, setSending] = useState(false);
+  const [pgpKeys, setPgpKeys] = useState<Record<string, PgpKeyRow>>({});
+  const [keysLoading, setKeysLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!user?.id || !otherUserId) return;
+    const loadKeys = async () => {
+      setKeysLoading(true);
+      const { data } = await supabase
+        .from("user_pgp_keys")
+        .select("user_id, public_key, fingerprint")
+        .in("user_id", [user.id, otherUserId]);
+      const next: Record<string, PgpKeyRow> = {};
+      (data || []).forEach((key: any) => {
+        next[key.user_id] = key;
+      });
+      setPgpKeys(next);
+      setKeysLoading(false);
+    };
+    loadKeys();
+  }, [user?.id, otherUserId]);
 
   useEffect(() => {
     if (!orderId) return;
@@ -78,7 +105,9 @@ export default function EncryptedChat({ orderId, otherUserId }: Props) {
         const decrypted = await Promise.all(
           data.map(async (m: any) => ({
             ...m,
-            decrypted: await decryptMessage(m.encrypted_text, m.iv, orderId, user?.id || "", otherUserId),
+            decrypted: m.ciphertext?.startsWith("-----BEGIN PGP MESSAGE-----")
+              ? "[PGP ciphertext — özel anahtarla dışarıda çözülür]"
+              : await decryptMessage(m.ciphertext, m.iv, orderId, user?.id || "", otherUserId),
           }))
         );
         setMessages(decrypted);
@@ -92,14 +121,16 @@ export default function EncryptedChat({ orderId, otherUserId }: Props) {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "encrypted_messages", filter: `order_id=eq.${orderId}` },
         async (payload) => {
           const m = payload.new as any;
-          const decrypted = await decryptMessage(m.encrypted_text, m.iv, orderId, user?.id || "", otherUserId);
+          const decrypted = m.ciphertext?.startsWith("-----BEGIN PGP MESSAGE-----")
+            ? "[PGP ciphertext — özel anahtarla dışarıda çözülür]"
+            : await decryptMessage(m.ciphertext, m.iv, orderId, user?.id || "", otherUserId);
           setMessages((prev) => [...prev, { ...m, decrypted }]);
         }
       )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [orderId]);
+  }, [orderId, otherUserId, user?.id]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -107,23 +138,35 @@ export default function EncryptedChat({ orderId, otherUserId }: Props) {
 
   const sendMessage = async () => {
     if (!newMsg.trim() || !user || sending) return;
+    const senderKey = pgpKeys[user.id]?.public_key;
+    const recipientKey = pgpKeys[otherUserId]?.public_key;
+    if (!senderKey || !recipientKey) return;
     setSending(true);
-    const { encrypted, iv } = await encryptMessage(newMsg.trim(), orderId, user.id, otherUserId);
+    const encrypted = await encryptForRecipients(newMsg.trim(), [senderKey, recipientKey]);
     await supabase.from("encrypted_messages").insert({
       order_id: orderId,
       sender_id: user.id,
       ciphertext: encrypted,
-      iv,
+      iv: "pgp-armored",
     } as any);
     setNewMsg("");
     setSending(false);
   };
 
+  const pgpReady = Boolean(user?.id && pgpKeys[user.id]?.public_key && pgpKeys[otherUserId]?.public_key);
+
   return (
     <div className="glass-card rounded-lg p-4 neon-border">
       <div className="flex items-center gap-2 mb-3 text-xs font-mono text-primary">
-        <Lock className="w-3 h-3" /> AES-256 Şifreli Mesajlaşma (aktarım sırasında şifrelenir)
+        <Lock className="w-3 h-3" /> PGP-only E2E mesajlaşma • sunucuda sadece ciphertext tutulur
       </div>
+
+      {!keysLoading && !pgpReady && (
+        <div className="mb-3 flex items-start gap-2 rounded border border-destructive/40 bg-destructive/10 p-3 text-[11px] font-mono text-destructive">
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          PGP chat için iki tarafın da PGP public key kaydetmesi gerekir. Düz metin gönderimi kapalıdır.
+        </div>
+      )}
 
       <div ref={scrollRef} className="space-y-2 max-h-64 overflow-y-auto pr-2 mb-3">
         {messages.length === 0 && (
@@ -143,7 +186,7 @@ export default function EncryptedChat({ orderId, otherUserId }: Props) {
                 {new Date(m.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
                 <Lock className="w-2 h-2 inline ml-1" />
               </div>
-              {m.decrypted || m.encrypted_text}
+              {m.decrypted || m.ciphertext}
             </div>
           </motion.div>
         ))}
@@ -154,11 +197,12 @@ export default function EncryptedChat({ orderId, otherUserId }: Props) {
           value={newMsg}
           onChange={(e) => setNewMsg(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-          placeholder="Şifreli mesaj yaz..."
+          placeholder={pgpReady ? "PGP ile şifrelenecek mesaj yaz..." : "PGP key gerekli"}
+          disabled={!pgpReady || keysLoading}
           className="flex-1 bg-secondary border border-border rounded px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
         />
-        <button onClick={sendMessage} disabled={sending} className="px-3 py-2 bg-primary text-primary-foreground rounded neon-glow-btn">
-          {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+        <button onClick={sendMessage} disabled={sending || !pgpReady || keysLoading} className="px-3 py-2 bg-primary text-primary-foreground rounded neon-glow-btn disabled:opacity-50">
+          {sending || keysLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : pgpReady ? <Send className="w-4 h-4" /> : <KeyRound className="w-4 h-4" />}
         </button>
       </div>
     </div>
