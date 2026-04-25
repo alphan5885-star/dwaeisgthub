@@ -49,6 +49,19 @@ export async function encryptForRecipient(plaintext: string, armoredPublicKey: s
   return encrypted as string;
 }
 
+export async function encryptForRecipients(plaintext: string, armoredPublicKeys: string[]): Promise<string> {
+  const encryptionKeys = await Promise.all(
+    armoredPublicKeys.filter(Boolean).map((armoredKey) => openpgp.readKey({ armoredKey: armoredKey.trim() }))
+  );
+  const message = await openpgp.createMessage({ text: plaintext });
+  const encrypted = await openpgp.encrypt({
+    message,
+    encryptionKeys,
+    format: "armored",
+  });
+  return encrypted as string;
+}
+
 export async function generateKeyPair(name: string, email: string, passphrase: string) {
   const { privateKey, publicKey, revocationCertificate } = await openpgp.generateKey({
     type: "ecc",
