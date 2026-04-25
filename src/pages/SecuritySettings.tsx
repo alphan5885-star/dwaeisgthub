@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import PageShell from "@/components/PageShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/authContext";
-import { Shield, Lock, Fingerprint, Save, Eye, EyeOff, Smartphone, Check, X, Loader2, Copy } from "lucide-react";
+import { Shield, Lock, Fingerprint, Save, Eye, EyeOff, Smartphone, Check, X, Loader2, Copy, Skull, Trash2, Power } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
@@ -20,6 +20,7 @@ export default function SecuritySettings() {
   const [verifyCode, setVerifyCode] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [unenrolling, setUnenrolling] = useState(false);
+  const [deadManEnabled, setDeadManEnabled] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -27,6 +28,7 @@ export default function SecuritySettings() {
       const { data } = await supabase.from("anti_phishing_codes").select("code").eq("user_id", user.id).maybeSingle();
       if (data) setSavedCode(data.code);
       await loadMfaFactors();
+      setDeadManEnabled(localStorage.getItem("dead-man-mode") === "armed");
     };
     fetchData();
   }, [user]);
@@ -99,6 +101,21 @@ export default function SecuritySettings() {
 
   const verifiedFactors = mfaFactors.filter(f => f.status === "verified");
   const hasActive2FA = verifiedFactors.length > 0;
+
+  const toggleDeadMan = () => {
+    const next = !deadManEnabled;
+    setDeadManEnabled(next);
+    localStorage.setItem("dead-man-mode", next ? "armed" : "off");
+    toast.success(next ? "Dead-Man Mode hazırlandı" : "Dead-Man Mode kapatıldı");
+  };
+
+  const emergencyWipe = async () => {
+    sessionStorage.clear();
+    localStorage.removeItem("dead-man-mode");
+    setDeadManEnabled(false);
+    await supabase.auth.signOut();
+    toast.success("Hassas oturum verileri temizlendi");
+  };
 
   return (
     <PageShell>
@@ -228,6 +245,35 @@ export default function SecuritySettings() {
               </button>
             </div>
           )}
+        </motion.div>
+
+        {/* Dead-Man Mode */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card rounded-lg p-6 neon-border">
+          <div className="flex items-center gap-2 mb-4">
+            <Skull className="w-5 h-5 text-primary" />
+            <h2 className="text-sm font-mono font-bold text-foreground">Dead-Man / Panic Mode</h2>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="bg-secondary rounded-lg p-4">
+              <div className="text-xs font-mono text-foreground mb-1">Oturum imha modu</div>
+              <div className="text-[10px] font-mono text-muted-foreground leading-relaxed">Logout, panik çıkış ve inactivity durumunda local/session cache temizliği aktif edilir.</div>
+              <button onClick={toggleDeadMan} className="mt-3 w-full py-2 bg-primary text-primary-foreground text-xs font-mono rounded neon-glow-btn flex items-center justify-center gap-2">
+                <Power className="w-3.5 h-3.5" /> {deadManEnabled ? "ARMED" : "Etkinleştir"}
+              </button>
+            </div>
+            <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4">
+              <div className="text-xs font-mono text-destructive mb-1">Panic wipe</div>
+              <div className="text-[10px] font-mono text-muted-foreground leading-relaxed">Acil durumda hassas tarayıcı verilerini temizler ve hesabı bu cihazdan çıkarır.</div>
+              <button onClick={emergencyWipe} className="mt-3 w-full py-2 bg-destructive text-destructive-foreground text-xs font-mono rounded flex items-center justify-center gap-2">
+                <Trash2 className="w-3.5 h-3.5" /> Hızlı İmha
+              </button>
+            </div>
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-2 text-[10px] font-mono">
+            <span className="rounded bg-secondary px-2 py-1 text-green-500">● PGP chat</span>
+            <span className="rounded bg-secondary px-2 py-1 text-green-500">● 15dk inactivity</span>
+            <span className="rounded bg-secondary px-2 py-1 text-green-500">● Panic logout</span>
+          </div>
         </motion.div>
 
         {/* Encryption Info */}
