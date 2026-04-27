@@ -6,11 +6,7 @@ export default function Index() {
   const { user, role, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-primary font-mono animate-pulse">Yükleniyor...</div>
-      </div>
-    );
+    return <Login />;
   }
 
   if (user && role) {

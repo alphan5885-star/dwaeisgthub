@@ -11,11 +11,7 @@ export function Protected({
 }) {
   const { user, role, loading } = useAuth();
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-primary font-mono animate-pulse">Yükleniyor...</div>
-      </div>
-    );
+    return <>{children}</>;
   }
   if (!user) return <Navigate to="/" replace />;
   if (!role || !roles.includes(role)) return <Navigate to="/" replace />;
