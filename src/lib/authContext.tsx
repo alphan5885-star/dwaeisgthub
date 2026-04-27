@@ -4,6 +4,14 @@ import type { User } from "@supabase/supabase-js";
 
 type Role = "admin" | "vendor" | "buyer" | null;
 
+const authTimeout = <T,>(promise: Promise<T>, fallback: T, ms = 3000) =>
+  Promise.race([
+    promise,
+    new Promise<T>((resolve) => {
+      window.setTimeout(() => resolve(fallback), ms);
+    }),
+  ]);
+
 interface AuthState {
   user: User | null;
   role: Role;
@@ -73,9 +81,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       void fetchRole(nextUser.id, requestId);
     };
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      applySession(session?.user ?? null);
-    });
+    void authTimeout(supabase.auth.getSession(), { data: { session: null }, error: null }).then(
+      ({ data: { session } }) => {
+        applySession(session?.user ?? null);
+      },
+    );
 
     const {
       data: { subscription },
