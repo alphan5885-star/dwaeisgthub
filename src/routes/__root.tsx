@@ -67,7 +67,7 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function AuthGuard({ children }: { children: ReactNode }) {
-  const { user, role, loading, logout } = useAuth();
+  const { user, role, logout } = useAuth();
   if (user && !role) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
