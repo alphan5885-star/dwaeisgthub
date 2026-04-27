@@ -2,34 +2,17 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Megaphone, X } from "lucide-react";
 import { useCustomization } from "@/lib/customizationContext";
-import { supabase } from "@/integrations/supabase/client";
+
+const fallbackNews = [
+  "🛡️ aeigsthub v3.0 güvenliğiniz için optimize edildi.",
+  "🚀 Platform güncellemeleri için forumu takip edin.",
+];
 
 export default function NewsTicker() {
   const { settings } = useCustomization();
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
-  const [news, setNews] = useState<string[]>([]);
-
-  useEffect(() => {
-    const fetchNews = async () => {
-      const { data, error } = await supabase
-        .from("system_announcements")
-        .select("content")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
-
-      if (data && data.length > 0) {
-        setNews(data.map((n) => n.content));
-      } else {
-        // Fallback if table is empty
-        setNews([
-          "🛡️ aeigsthub v3.0 güvenliğiniz için optimize edildi.",
-          "🚀 Platform güncellemeleri için forumu takip edin.",
-        ]);
-      }
-    };
-    fetchNews();
-  }, []);
+  const news = fallbackNews;
 
   useEffect(() => {
     if (news.length === 0) return;
