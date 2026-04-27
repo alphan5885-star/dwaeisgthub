@@ -1,4 +1,10 @@
 project_id = "okhgwsgekmzslkucfkgd"
 
 [functions.kizilyurek-chat]
-verify_jwt = false
+verify_jwt = true
+
+[functions.create-deposit-address]
+verify_jwt = true
+
+[functions.sync-deposits]
+verify_jwt = true

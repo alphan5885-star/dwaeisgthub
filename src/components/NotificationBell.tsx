@@ -3,7 +3,7 @@ import { Bell, Package, MessageSquare, AlertTriangle, X, Check } from "lucide-re
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/authContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "@/lib/router-shim";
+import { sanitizeInternalPath, useNavigate } from "@/lib/router-shim";
 
 interface Notification {
   id: string;
@@ -185,7 +185,10 @@ export default function NotificationBell() {
                       key={n.id}
                       onClick={() => {
                         markAsRead(n.id);
-                        if (n.link) navigate(n.link);
+                        if (n.link) {
+                          const safePath = sanitizeInternalPath(n.link);
+                          if (safePath) navigate(safePath);
+                        }
                       }}
                       className={`flex items-start gap-3 px-4 py-3 border-b border-border/50 cursor-pointer hover:bg-secondary/50 transition-colors ${
                         !n.read ? "bg-primary/5" : ""

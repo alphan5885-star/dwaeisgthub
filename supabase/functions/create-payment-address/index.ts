@@ -1,12 +1,29 @@
 // Generates a temporary LTC payment address via BlockCypher and saves it to the order
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+const corsHeadersBase = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("Origin") ?? "";
+  const envAllowlist = Deno.env.get("ALLOWED_ORIGINS") ?? "";
+  const allowedOrigins = envAllowlist
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  if (allowedOrigins.length === 0) {
+    const siteUrl = Deno.env.get("SITE_URL");
+    if (siteUrl) allowedOrigins.push(siteUrl);
+  }
+  const allowOrigin =
+    origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0] || "null";
+  return { ...corsHeadersBase, "Access-Control-Allow-Origin": allowOrigin, Vary: "Origin" };
+}
+
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {

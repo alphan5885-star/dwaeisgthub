@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/authContext";
 import { useCustomization } from "@/lib/customizationContext";
 import { useStealth } from "@/lib/stealthContext";
 import { useI18n } from "@/lib/i18n";
-import { useNavigate, useLocation, Link } from "@/lib/router-shim";
+import { useNavigate, useLocation, Link, sanitizeInternalPath } from "@/lib/router-shim";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Shield,
@@ -305,7 +305,11 @@ export default function AppSidebar() {
                 {activity.map((a) => (
                   <button
                     key={a.id}
-                    onClick={() => a.link && navigate(a.link)}
+                    onClick={() => {
+                      if (!a.link) return;
+                      const safePath = sanitizeInternalPath(a.link);
+                      if (safePath) navigate(safePath);
+                    }}
                     className="w-full text-left p-2 rounded hover:bg-secondary/30 transition-all border border-transparent hover:border-white/5"
                   >
                     <div className="text-[10px] font-mono text-foreground/80 truncate">

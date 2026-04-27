@@ -9,6 +9,23 @@ import {
 import { useEffect, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
+export function sanitizeInternalPath(input: string): string | null {
+  if (!input) return null;
+  const value = input.trim();
+  if (!value.startsWith("/")) return null;
+  if (value.startsWith("//")) return null;
+  if (/[^\x20-\x7E]/.test(value)) return null;
+  const lowered = value.toLowerCase();
+  if (
+    lowered.startsWith("/http:") ||
+    lowered.startsWith("/https:") ||
+    lowered.startsWith("/javascript:")
+  ) {
+    return null;
+  }
+  return value;
+}
+
 export function useNavigate() {
   const nav = tsUseNavigate();
   return (to: string | number, opts?: { replace?: boolean }) => {
@@ -17,6 +34,20 @@ export function useNavigate() {
       return;
     }
     nav({ to, replace: opts?.replace } as never);
+  };
+}
+
+export function useSafeNavigate() {
+  const navigate = useNavigate();
+  return (to: string | number, opts?: { replace?: boolean }) => {
+    if (typeof to === "number") {
+      navigate(to, opts);
+      return true;
+    }
+    const sanitized = sanitizeInternalPath(to);
+    if (!sanitized) return false;
+    navigate(sanitized, opts);
+    return true;
   };
 }
 

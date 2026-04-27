@@ -64,6 +64,9 @@ export default function PaymentTracker({ orderId, amount }: Props) {
         if (data) {
           setConfirmations(data.confirmations || 0);
           setStatus(data.status || "awaiting_manual_xmr");
+          if (data.underpaid) {
+            toast.error("Eksik ödeme algılandı. Lütfen tam tutarı gönder.");
+          }
         }
       } catch (e) {
         if (import.meta.env.DEV) console.error("Catch check-payment-status:", e);
@@ -188,6 +191,11 @@ export default function PaymentTracker({ orderId, amount }: Props) {
                 <div className="text-[10px] text-muted-foreground italic">veya eşdeğer XMR</div>
               </div>
             </div>
+            {status === "underpaid" && (
+              <div className="mt-1 border-t border-border/50 pt-1 text-[10px] text-destructive">
+                Eksik ödeme tespit edildi. Bakiye yansıtılmaz, sipariş onaylanmaz.
+              </div>
+            )}
             <div className="flex justify-between mt-1 border-t border-border/50 pt-1">
               <span className="text-muted-foreground">Doğrulama:</span>
               <span

@@ -1,12 +1,29 @@
 // Polls BlockCypher for confirmations on the order's payment address and triggers RPC
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+const corsHeadersBase = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("Origin") ?? "";
+  const envAllowlist = Deno.env.get("ALLOWED_ORIGINS") ?? "";
+  const allowedOrigins = envAllowlist
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  if (allowedOrigins.length === 0) {
+    const siteUrl = Deno.env.get("SITE_URL");
+    if (siteUrl) allowedOrigins.push(siteUrl);
+  }
+  const allowOrigin =
+    origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0] || "null";
+  return { ...corsHeadersBase, "Access-Control-Allow-Origin": allowOrigin, Vary: "Origin" };
+}
+
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
@@ -87,23 +104,29 @@ Deno.serve(async (req) => {
     // Find the highest confirmation count among incoming txs
     let maxConfirmations = 0;
     let totalReceived = 0;
+    let confirmedReceived = 0;
     for (const tx of bcData.txs || []) {
       const conf = tx.confirmations ?? 0;
       if (conf > maxConfirmations) maxConfirmations = conf;
       // Sum outputs going to our address
       for (const out of tx.outputs || []) {
         if ((out.addresses || []).includes(order.payment_address)) {
-          totalReceived += out.value || 0;
+          const outValue = out.value || 0;
+          totalReceived += outValue;
+          if (conf >= 3) confirmedReceived += outValue;
         }
       }
     }
 
     const cap = Math.min(maxConfirmations, 6);
+    const requiredSatoshi = Math.ceil(Number(order.amount) * 100000000);
+    const hasEnoughConfirmedFunds = confirmedReceived >= requiredSatoshi;
+    const effectiveConfirmations = hasEnoughConfirmedFunds ? cap : Math.min(cap, 2);
 
     // Trigger RPC (handles idempotency)
     const { data: rpcData, error: rpcErr } = await service.rpc("process_payment_confirmation", {
       _order_id: order_id,
-      _confirmations: cap,
+      _confirmations: effectiveConfirmations,
     });
 
     if (rpcErr) console.error("RPC err", rpcErr);
@@ -113,7 +136,18 @@ Deno.serve(async (req) => {
         confirmations: cap,
         required: 3,
         received_satoshi: totalReceived,
-        status: cap >= 3 ? "confirmed" : cap > 0 ? "confirming" : "awaiting_payment",
+        confirmed_received_satoshi: confirmedReceived,
+        required_satoshi: requiredSatoshi,
+        underpaid: !hasEnoughConfirmedFunds,
+        status: hasEnoughConfirmedFunds
+          ? cap >= 3
+            ? "confirmed"
+            : cap > 0
+              ? "confirming"
+              : "awaiting_payment"
+          : totalReceived > 0
+            ? "underpaid"
+            : "awaiting_payment",
         rpc: rpcData,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },

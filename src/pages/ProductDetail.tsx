@@ -10,10 +10,9 @@ import VendorRating from "@/components/VendorRating";
 import PgpBadge from "@/components/PgpBadge";
 import DeliveryMethodSelector from "@/components/DeliveryMethodSelector";
 import MathCaptcha from "@/components/MathCaptcha";
-import PaymentTracker from "@/components/PaymentTracker";
 import { encryptForRecipient } from "@/lib/pgp";
 
-const SERVICE_FEE_RATE = 0.05;
+const SERVICE_FEE_RATE = 0;
 type DeliveryMethod = "cargo" | "dead_drop" | "mailbox";
 
 interface ProductRow {
@@ -149,33 +148,31 @@ export default function ProductDetail() {
     }
 
     try {
-      const { data: order, error } = await supabase
-        .from("orders")
-        .insert({
-          product_id: product.id,
-          buyer_id: user.id,
-          vendor_id: product.vendor_id,
-          status: "pending",
-          amount: totalPrice,
-          service_fee: serviceFee,
-          delivery_method: product.type === "digital" ? "cargo" : deliveryMethod,
-          shipping_address: finalAddress,
-          notes: finalNotes,
-        } as any)
-        .select()
-        .maybeSingle();
+      const { data: orderResult, error } = await (supabase as any).rpc("create_order_with_escrow", {
+        _product_id: product.id,
+        _delivery_method: product.type === "digital" ? "cargo" : deliveryMethod,
+        _shipping_address: finalAddress,
+        _notes: finalNotes,
+      });
 
       if (!isMounted.current) return;
 
-      if (error || !order) {
+      const createdOrderId = (orderResult as { order_id?: string; error?: string } | null)
+        ?.order_id;
+      if (error || !createdOrderId) {
         if (import.meta.env.DEV) console.error("Error creating order:", error);
-        toast.error("Sipariş oluşturulamadı");
+        toast.error(
+          (orderResult as { error?: string } | null)?.error === "insufficient_balance"
+            ? "Yetersiz bakiye. Once wallet'a LTC yukle."
+            : "Sipariş oluşturulamadı",
+        );
         setCreating(false);
         return;
       }
 
       if (encrypted) toast.success("🔐 Adres satıcının PGP anahtarıyla şifrelendi");
-      setOrderId(order.id);
+      toast.success("Odeme escrow'a alindi. Urun teslim onayina kadar kilitli kalir.");
+      setOrderId(createdOrderId);
     } catch (e) {
       if (import.meta.env.DEV) console.error("Catch error in ProductDetail startPayment:", e);
       if (isMounted.current) toast.error("Sipariş oluşturulurken beklenmedik hata");
@@ -267,11 +264,9 @@ export default function ProductDetail() {
         <div className="glass-card rounded-lg p-3 mb-4 flex items-center gap-3 border border-primary/20">
           <Shield className="w-5 h-5 text-primary flex-shrink-0" />
           <div>
-            <div className="text-[11px] font-mono font-bold text-primary">
-              BlockCypher Canlı Doğrulama
-            </div>
+            <div className="text-[11px] font-mono font-bold text-primary">Bakiye Bazli Escrow</div>
             <div className="text-[9px] font-mono text-muted-foreground">
-              Geçici LTC adresi • 3 onay sonrası otomatik Operasyon DM • Komisyon dağıtımı
+              Once wallet'a LTC yukle • Satin alimda escrow hold • Teslimde %90/%10 dagitim
             </div>
           </div>
         </div>
@@ -355,15 +350,18 @@ export default function ProductDetail() {
         )}
 
         {orderId && (
-          <div>
-            <div className="flex items-center gap-2 mb-3 p-2 bg-secondary rounded">
+          <div className="glass-card rounded-lg p-4 border border-primary/30 bg-primary/5">
+            <div className="flex items-center gap-2 mb-2">
               <Hash className="w-4 h-4 text-primary" />
               <span className="text-xs font-mono text-muted-foreground">Sipariş:</span>
               <span className="text-xs font-mono text-foreground font-bold">
                 {orderId.slice(0, 8).toUpperCase()}
               </span>
             </div>
-            <PaymentTracker orderId={orderId} amount={totalPrice} />
+            <p className="text-xs font-mono text-muted-foreground">
+              Bakiye escrow'a alindi. Satici teslim ettiginde, sen sipariş ekranindan onayladiginda
+              fonlar otomatik dagitilir.
+            </p>
           </div>
         )}
       </div>

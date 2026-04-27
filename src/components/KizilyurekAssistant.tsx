@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Bot, X, Send, AlertTriangle, Trash2, ShieldCheck, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useSessionTimer } from "@/lib/sessionTimerContext";
+import { supabase } from "@/integrations/supabase/client";
 
 type Msg = { role: "user" | "assistant" | "system"; content: string };
 
@@ -22,6 +23,7 @@ const QUICK = [
 ];
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kizilyurek-chat`;
+const ALLOWED_MARKDOWN_ELEMENTS = ["p", "strong", "em", "code", "pre", "ul", "ol", "li", "br"];
 
 export default function KizilyurekAssistant({
   position = "bottom-right",
@@ -76,11 +78,26 @@ export default function KizilyurekAssistant({
     setLoading(true);
 
     try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setMessages((p) => [
+          ...p,
+          {
+            role: "assistant",
+            content: "⚠️ Oturum doğrulaması bulunamadı. Lütfen yeniden giriş yap.",
+          },
+        ]);
+        setLoading(false);
+        return;
+      }
+
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           messages: next
@@ -255,7 +272,18 @@ export default function KizilyurekAssistant({
                       m.content
                     ) : (
                       <div className="prose prose-invert prose-xs max-w-none [&>*]:my-1">
-                        <ReactMarkdown>{m.content}</ReactMarkdown>
+                        <ReactMarkdown
+                          allowedElements={ALLOWED_MARKDOWN_ELEMENTS}
+                          skipHtml
+                          urlTransform={(url) => {
+                            const cleaned = url.trim().toLowerCase();
+                            return cleaned.startsWith("http://") || cleaned.startsWith("https://")
+                              ? url
+                              : "";
+                          }}
+                        >
+                          {m.content}
+                        </ReactMarkdown>
                       </div>
                     )}
                   </div>
