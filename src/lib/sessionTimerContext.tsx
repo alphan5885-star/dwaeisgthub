@@ -22,7 +22,9 @@ function purgeAllStorage() {
       const name = (eq > -1 ? c.substr(0, eq) : c).trim();
       document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
     });
-  } catch {}
+  } catch {
+    void 0;
+  }
 }
 
 export function SessionTimerProvider({ children }: { children: ReactNode }) {
@@ -58,7 +60,9 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
         setRemainingMs(0);
         try {
           await supabase.auth.signOut();
-        } catch {}
+        } catch {
+          void 0;
+        }
         purgeAllStorage();
         navigate("/", { replace: true });
         setExpiresAt(null);

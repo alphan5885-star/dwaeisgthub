@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useSecurity } from "@/lib/securityContext";
-import { Shield, ShieldAlert, ShieldCheck, X } from "lucide-react";
+import { useStealth } from "@/lib/stealthContext";
+import { Shield, ShieldAlert, ShieldCheck, X, EyeOff } from "lucide-react";
 
 export default function SecurityHud() {
   const { threatLevel, events, blocked, unblock } = useSecurity();
+  const { isStealth } = useStealth();
   const [open, setOpen] = useState(false);
 
-  const Icon = threatLevel === "danger" ? ShieldAlert : threatLevel === "warn" ? Shield : ShieldCheck;
+  const Icon =
+    threatLevel === "danger" ? ShieldAlert : threatLevel === "warn" ? Shield : ShieldCheck;
   const color =
     threatLevel === "danger"
       ? "text-destructive border-destructive/50"
@@ -43,7 +46,10 @@ export default function SecurityHud() {
       </button>
 
       {open && (
-        <div className="fixed inset-0 bg-background/80 z-50 flex items-center justify-center p-4" onClick={() => setOpen(false)}>
+        <div
+          className="fixed inset-0 bg-background/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setOpen(false)}
+        >
           <div
             className="glass-card neon-border rounded-lg p-5 w-full max-w-md max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
@@ -53,12 +59,23 @@ export default function SecurityHud() {
                 <Shield className="w-4 h-4" />
                 Güvenlik Olayları
               </h3>
-              <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
+              {isStealth && (
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/30 text-[10px] font-mono text-blue-500 uppercase">
+                  <EyeOff className="w-3 h-3" />
+                  Stealth Aktif
+                </div>
+              )}
+              <button
+                onClick={() => setOpen(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
             {events.length === 0 ? (
-              <p className="text-xs font-mono text-muted-foreground text-center py-4">Olay yok — tüm sistemler nominal.</p>
+              <p className="text-xs font-mono text-muted-foreground text-center py-4">
+                Olay yok — tüm sistemler nominal.
+              </p>
             ) : (
               <div className="space-y-1">
                 {events.map((e) => (
@@ -82,7 +99,8 @@ export default function SecurityHud() {
               </div>
             )}
             <p className="text-[10px] font-mono text-muted-foreground mt-3 pt-3 border-t border-border">
-              Not: Frontend tespitidir. Gerçek güvenlik sunucu tarafında (RLS + sunucu rate-limit) sağlanır.
+              Not: Frontend tespitidir. Gerçek güvenlik sunucu tarafında (RLS + sunucu rate-limit)
+              sağlanır.
             </p>
           </div>
         </div>

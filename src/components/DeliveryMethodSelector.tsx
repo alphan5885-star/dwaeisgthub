@@ -10,8 +10,18 @@ interface Props {
 
 const methods = [
   { id: "cargo" as const, label: "Kargo", desc: "Standart kargo takipli gönderim", icon: Truck },
-  { id: "dead_drop" as const, label: "Dead-Drop", desc: "GPS koordinatlı elden bırakma", icon: MapPin },
-  { id: "mailbox" as const, label: "Anonim Posta", desc: "Anonim posta kutusu teslimatı", icon: Mail },
+  {
+    id: "dead_drop" as const,
+    label: "Dead-Drop",
+    desc: "GPS koordinatlı elden bırakma",
+    icon: MapPin,
+  },
+  {
+    id: "mailbox" as const,
+    label: "Anonim Posta",
+    desc: "Anonim posta kutusu teslimatı",
+    icon: Mail,
+  },
 ];
 
 export default function DeliveryMethodSelector({ value, onChange, productType }: Props) {

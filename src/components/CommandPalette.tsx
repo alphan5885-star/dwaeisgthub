@@ -1,9 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "@/lib/router-shim";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Package, Store, Wallet, ShoppingCart, Lock, Palette, MessageSquare, ArrowRightLeft, User, FileWarning, ScrollText, LayoutDashboard, Heart, Bot } from "lucide-react";
+import {
+  Search,
+  Package,
+  Store,
+  Wallet,
+  ShoppingCart,
+  Lock,
+  Palette,
+  MessageSquare,
+  ArrowRightLeft,
+  User,
+  FileWarning,
+  ScrollText,
+  LayoutDashboard,
+  Heart,
+  Bot,
+} from "lucide-react";
 
-type Item = { id: string; label: string; sub?: string; icon: any; action: () => void; group: string };
+type Item = {
+  id: string;
+  label: string;
+  sub?: string;
+  icon: any;
+  action: () => void;
+  group: string;
+};
 
 export default function CommandPalette() {
   const navigate = useNavigate();
@@ -30,37 +53,125 @@ export default function CommandPalette() {
     };
   }, []);
 
+  const isMounted = useRef(true);
+
   useEffect(() => {
-    if (!open) { setQuery(""); setActiveIndex(0); return; }
-    (async () => {
-      const [{ data: p }, { data: v }] = await Promise.all([
-        supabase.from("products").select("id, name, price").gt("stock", 0).limit(20),
-        supabase.from("profiles").select("user_id, display_name").limit(20),
-      ]);
-      setProducts((p as any) || []);
-      setVendors((v as any) || []);
-    })();
+    if (!open) {
+      setQuery("");
+      setActiveIndex(0);
+      return;
+    }
+    isMounted.current = true;
+    const fetchData = async () => {
+      try {
+        const [{ data: p, error: pErr }, { data: v, error: vErr }] = await Promise.all([
+          supabase.from("products").select("id, name, price").gt("stock", 0).limit(20),
+          supabase.from("profiles").select("user_id, display_name").limit(20),
+        ]);
+        if (!isMounted.current) return;
+        if (pErr) {
+          if (import.meta.env.DEV) console.error("Error fetching products for palette:", pErr);
+        }
+        if (vErr) {
+          if (import.meta.env.DEV) console.error("Error fetching profiles for palette:", vErr);
+        }
+        setProducts((p as any) || []);
+        setVendors((v as any) || []);
+      } catch (e) {
+        if (import.meta.env.DEV) console.error("Catch fetching palette data:", e);
+      }
+    };
+    fetchData();
+    return () => {
+      isMounted.current = false;
+    };
   }, [open]);
 
-  const go = (path: string) => { setOpen(false); navigate(path); };
+  const go = (path: string) => {
+    setOpen(false);
+    navigate(path);
+  };
 
   const pages: Item[] = [
-    { id: "p1", label: "Market", icon: ShoppingCart, action: () => go("/market"), group: "Sayfalar" },
-    { id: "p2", label: "Siparişlerim", icon: Package, action: () => go("/orders"), group: "Sayfalar" },
+    {
+      id: "p1",
+      label: "Market",
+      icon: ShoppingCart,
+      action: () => go("/market"),
+      group: "Sayfalar",
+    },
+    {
+      id: "p2",
+      label: "Siparişlerim",
+      icon: Package,
+      action: () => go("/orders"),
+      group: "Sayfalar",
+    },
     { id: "p3", label: "Cüzdan", icon: Wallet, action: () => go("/wallet"), group: "Sayfalar" },
-    { id: "p4", label: "İşlemler", icon: ArrowRightLeft, action: () => go("/transactions"), group: "Sayfalar" },
-    { id: "p5", label: "Forum", icon: MessageSquare, action: () => go("/forum"), group: "Sayfalar" },
+    {
+      id: "p4",
+      label: "İşlemler",
+      icon: ArrowRightLeft,
+      action: () => go("/transactions"),
+      group: "Sayfalar",
+    },
+    {
+      id: "p5",
+      label: "Forum",
+      icon: MessageSquare,
+      action: () => go("/forum"),
+      group: "Sayfalar",
+    },
     { id: "p6", label: "Güvenlik", icon: Lock, action: () => go("/security"), group: "Sayfalar" },
     { id: "p7", label: "Profil", icon: User, action: () => go("/profile"), group: "Sayfalar" },
-    { id: "p8", label: "Özelleştirme", icon: Palette, action: () => go("/customization"), group: "Sayfalar" },
-    { id: "p9", label: "Vendor Paneli", icon: Store, action: () => go("/vendor"), group: "Sayfalar" },
-    { id: "p10", label: "Admin Dashboard", icon: LayoutDashboard, action: () => go("/admin"), group: "Sayfalar" },
-    { id: "p11", label: "Disputes", icon: FileWarning, action: () => go("/admin/disputes"), group: "Sayfalar" },
-    { id: "p12", label: "Security Logs", icon: ScrollText, action: () => go("/admin/security-logs"), group: "Sayfalar" },
+    {
+      id: "p8",
+      label: "Özelleştirme",
+      icon: Palette,
+      action: () => go("/customization"),
+      group: "Sayfalar",
+    },
+    {
+      id: "p9",
+      label: "Vendor Paneli",
+      icon: Store,
+      action: () => go("/vendor"),
+      group: "Sayfalar",
+    },
+    {
+      id: "p10",
+      label: "Admin Dashboard",
+      icon: LayoutDashboard,
+      action: () => go("/admin"),
+      group: "Sayfalar",
+    },
+    {
+      id: "p11",
+      label: "Disputes",
+      icon: FileWarning,
+      action: () => go("/admin/disputes"),
+      group: "Sayfalar",
+    },
+    {
+      id: "p12",
+      label: "Security Logs",
+      icon: ScrollText,
+      action: () => go("/admin/security-logs"),
+      group: "Sayfalar",
+    },
   ];
 
   const actions: Item[] = [
-    { id: "a1", label: "Kızılyürek AI Aç", icon: Bot, action: () => { setOpen(false); window.dispatchEvent(new CustomEvent("kizilyurek:toggle")); }, group: "Eylemler" },
+    {
+      id: "a1",
+      label: "Kızılyürek AI Aç",
+      icon: Bot,
+      action: () => {
+        setOpen(false);
+        window.dispatchEvent(new CustomEvent("kizilyurek:toggle"));
+      },
+      group: "Eylemler",
+    },
   ];
 
   const productItems: Item[] = products.map((p) => ({
@@ -83,24 +194,45 @@ export default function CommandPalette() {
 
   const all = [...pages, ...actions, ...productItems, ...vendorItems];
   const q = query.toLowerCase().trim();
-  const filtered = q ? all.filter((i) => i.label.toLowerCase().includes(q) || i.sub?.toLowerCase().includes(q)) : all;
+  const filtered = q
+    ? all.filter((i) => i.label.toLowerCase().includes(q) || i.sub?.toLowerCase().includes(q))
+    : all;
   const grouped: Record<string, Item[]> = {};
-  filtered.forEach((i) => { (grouped[i.group] ||= []).push(i); });
+  filtered.forEach((i) => {
+    (grouped[i.group] ||= []).push(i);
+  });
 
-  useEffect(() => { setActiveIndex(0); }, [query]);
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [query]);
 
   const flat = filtered;
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowDown") { e.preventDefault(); setActiveIndex((i) => Math.min(i + 1, flat.length - 1)); }
-    if (e.key === "ArrowUp") { e.preventDefault(); setActiveIndex((i) => Math.max(i - 1, 0)); }
-    if (e.key === "Enter") { e.preventDefault(); flat[activeIndex]?.action(); }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => Math.min(i + 1, flat.length - 1));
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => Math.max(i - 1, 0));
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      flat[activeIndex]?.action();
+    }
   };
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-start justify-center pt-[10vh] p-4" onClick={() => setOpen(false)}>
-      <div className="w-full max-w-xl glass-card neon-border rounded-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-start justify-center pt-[10vh] p-4"
+      onClick={() => setOpen(false)}
+    >
+      <div
+        className="w-full max-w-xl glass-card neon-border rounded-lg overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
           <Search className="w-4 h-4 text-primary" />
           <input
@@ -111,12 +243,16 @@ export default function CommandPalette() {
             placeholder="Ürün, satıcı veya sayfa ara..."
             className="flex-1 bg-transparent outline-none text-sm font-mono text-foreground placeholder:text-muted-foreground"
           />
-          <kbd className="text-[10px] font-mono text-muted-foreground border border-border px-1.5 py-0.5 rounded">ESC</kbd>
+          <kbd className="text-[10px] font-mono text-muted-foreground border border-border px-1.5 py-0.5 rounded">
+            ESC
+          </kbd>
         </div>
         <div className="max-h-[60vh] overflow-y-auto">
           {Object.entries(grouped).map(([group, items]) => (
             <div key={group}>
-              <div className="px-4 pt-3 pb-1 text-[10px] font-mono text-muted-foreground uppercase">{group}</div>
+              <div className="px-4 pt-3 pb-1 text-[10px] font-mono text-muted-foreground uppercase">
+                {group}
+              </div>
               {items.map((item) => {
                 const idx = flat.indexOf(item);
                 const active = idx === activeIndex;
@@ -129,14 +265,20 @@ export default function CommandPalette() {
                   >
                     <item.icon className="w-4 h-4 shrink-0" />
                     <span className="flex-1 truncate">{item.label}</span>
-                    {item.sub && <span className="text-[10px] font-mono text-muted-foreground">{item.sub}</span>}
+                    {item.sub && (
+                      <span className="text-[10px] font-mono text-muted-foreground">
+                        {item.sub}
+                      </span>
+                    )}
                   </button>
                 );
               })}
             </div>
           ))}
           {flat.length === 0 && (
-            <div className="px-4 py-8 text-center text-sm font-mono text-muted-foreground">Sonuç yok</div>
+            <div className="px-4 py-8 text-center text-sm font-mono text-muted-foreground">
+              Sonuç yok
+            </div>
           )}
         </div>
         <div className="px-4 py-2 border-t border-border flex items-center justify-between text-[10px] font-mono text-muted-foreground">

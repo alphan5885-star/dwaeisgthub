@@ -3,9 +3,15 @@ import { Clock } from "lucide-react";
 
 function fmt(ms: number) {
   const t = Math.max(0, Math.floor(ms / 1000));
-  const h = Math.floor(t / 3600).toString().padStart(2, "0");
-  const m = Math.floor((t % 3600) / 60).toString().padStart(2, "0");
-  const s = Math.floor(t % 60).toString().padStart(2, "0");
+  const h = Math.floor(t / 3600)
+    .toString()
+    .padStart(2, "0");
+  const m = Math.floor((t % 3600) / 60)
+    .toString()
+    .padStart(2, "0");
+  const s = Math.floor(t % 60)
+    .toString()
+    .padStart(2, "0");
   return `${h}:${m}:${s}`;
 }
 

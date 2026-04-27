@@ -12,6 +12,8 @@ export interface CustomizationSettings {
   // Sidebar
   sidebarCollapsed: boolean;
   sidebarPosition: "left" | "right";
+  // Currency
+  preferredCurrency: "LTC" | "USD" | "XMR";
 }
 
 const defaults: CustomizationSettings = {
@@ -22,6 +24,7 @@ const defaults: CustomizationSettings = {
   animationsEnabled: true,
   sidebarCollapsed: false,
   sidebarPosition: "left",
+  preferredCurrency: "LTC",
 };
 
 interface CustomizationContextType {

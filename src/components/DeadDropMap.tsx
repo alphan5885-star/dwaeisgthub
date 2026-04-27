@@ -28,9 +28,14 @@ function LocationSelector({ onSelect }: { onSelect: (lat: number, lng: number) =
   return null;
 }
 
-export default function DeadDropMap({ mode, latitude, longitude, onLocationSelect }: DeadDropMapProps) {
+export default function DeadDropMap({
+  mode,
+  latitude,
+  longitude,
+  onLocationSelect,
+}: DeadDropMapProps) {
   const [position, setPosition] = useState<[number, number] | null>(
-    latitude && longitude ? [latitude, longitude] : null
+    latitude && longitude ? [latitude, longitude] : null,
   );
 
   useEffect(() => {
@@ -46,7 +51,12 @@ export default function DeadDropMap({ mode, latitude, longitude, onLocationSelec
 
   return (
     <div className="relative rounded-lg overflow-hidden border border-border">
-      <MapContainer center={center} zoom={position ? 15 : 10} style={{ height: "250px", width: "100%" }} className="z-0">
+      <MapContainer
+        center={center}
+        zoom={position ? 15 : 10}
+        style={{ height: "250px", width: "100%" }}
+        className="z-0"
+      >
         <TileLayer
           attribution='&copy; <a href="https://osm.org/copyright">OSM</a>'
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"

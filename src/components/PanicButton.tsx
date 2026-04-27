@@ -16,10 +16,17 @@ export default function PanicButton() {
     try {
       const { data, error } = await supabase.rpc("panic_wipe_user" as any);
       if (error) throw error;
-      const res = data as { success: boolean; rooms_destroyed?: number; orders_cancelled?: number; error?: string };
+      const res = data as {
+        success: boolean;
+        rooms_destroyed?: number;
+        orders_cancelled?: number;
+        error?: string;
+      };
       if (!res?.success) throw new Error(res?.error || "Panic failed");
 
-      toast.success(`🔥 İzler silindi. ${res.rooms_destroyed ?? 0} oda imha, ${res.orders_cancelled ?? 0} sipariş iptal. Çıkış yapılıyor…`);
+      toast.success(
+        `🔥 İzler silindi. ${res.rooms_destroyed ?? 0} oda imha, ${res.orders_cancelled ?? 0} sipariş iptal. Çıkış yapılıyor…`,
+      );
 
       // Nuke client-side state
       try {
@@ -29,7 +36,9 @@ export default function PanicButton() {
           const name = c.split("=")[0].trim();
           document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
         });
-      } catch {}
+      } catch {
+        void 0;
+      }
 
       await logout();
       navigate("/", { replace: true });
@@ -48,7 +57,8 @@ export default function PanicButton() {
         <div>
           <div className="text-sm font-mono font-bold text-destructive">PANİK MODU</div>
           <div className="text-[11px] text-muted-foreground font-mono leading-relaxed mt-1">
-            Tüm sohbet geçmişlerin silinir, bekleyen siparişlerin iptal edilir, bakiyen dondurulur ve oturumun anında kapatılır. <span className="text-destructive">Geri alınamaz.</span>
+            Tüm sohbet geçmişlerin silinir, bekleyen siparişlerin iptal edilir, bakiyen dondurulur
+            ve oturumun anında kapatılır. <span className="text-destructive">Geri alınamaz.</span>
           </div>
         </div>
       </div>

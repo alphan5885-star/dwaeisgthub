@@ -20,7 +20,7 @@ const translations = {
     no: "Hayır",
     error: "Hata",
     success: "Başarılı",
-    
+
     // Auth
     login: "Giriş Yap",
     signup: "Kayıt Ol",
@@ -38,7 +38,7 @@ const translations = {
     mfaCode: "MFA Kodu",
     mfaVerify: "Doğrula",
     accountNoRole: "Hesap yetkisi yüklenemedi.",
-    
+
     // Sidebar
     dashboard: "Dashboard",
     securityLogs: "Security Logs",
@@ -55,7 +55,10 @@ const translations = {
     myOrders: "Siparişlerim",
     store: "Mağaza",
     watchlist: "Favoriler",
-    
+    pgpTool: "PGP Araçları",
+    cipherNotes: "Şifreli Notlar",
+    stealthMode: "Gizlenme Modu",
+
     // Customization
     customization: "Özelleştirme",
     themeColor: "Tema Rengi",
@@ -86,7 +89,7 @@ const translations = {
     language: "Dil",
     selectLanguage: "Dil Seçimi",
     systemFont: "Sistem Fontu",
-    
+
     // Colors
     red: "Kırmızı",
     blue: "Mavi",
@@ -96,12 +99,12 @@ const translations = {
     cyan: "Camgöbeği",
     pink: "Pembe",
     yellow: "Sarı",
-    
+
     // Notifications
     notifications: "Bildirimler",
     noNotifications: "Bildirim yok",
     markAllRead: "Tümünü okundu işaretle",
-    
+
     // Formats
     supportedFormats: "Desteklenen formatlar: JPG, PNG, GIF, WebP",
     maxFileSize: "Maksimum dosya boyutu: 10MB",
@@ -122,7 +125,7 @@ const translations = {
     no: "No",
     error: "Error",
     success: "Success",
-    
+
     login: "Login",
     signup: "Sign Up",
     email: "Email",
@@ -139,7 +142,7 @@ const translations = {
     mfaCode: "MFA Code",
     mfaVerify: "Verify",
     accountNoRole: "Could not load account permissions.",
-    
+
     dashboard: "Dashboard",
     securityLogs: "Security Logs",
     disputes: "Disputes",
@@ -155,7 +158,10 @@ const translations = {
     myOrders: "My Orders",
     store: "Store",
     watchlist: "Watchlist",
-    
+    pgpTool: "PGP Tools",
+    cipherNotes: "Cipher Notes",
+    stealthMode: "Stealth Mode",
+
     customization: "Customization",
     themeColor: "Theme Color",
     font: "Font",
@@ -185,7 +191,7 @@ const translations = {
     language: "Language",
     selectLanguage: "Language Selection",
     systemFont: "System Font",
-    
+
     red: "Red",
     blue: "Blue",
     green: "Green",
@@ -194,11 +200,11 @@ const translations = {
     cyan: "Cyan",
     pink: "Pink",
     yellow: "Yellow",
-    
+
     notifications: "Notifications",
     noNotifications: "No notifications",
     markAllRead: "Mark all as read",
-    
+
     supportedFormats: "Supported formats: JPG, PNG, GIF, WebP",
     maxFileSize: "Maximum file size: 10MB",
   },
@@ -218,7 +224,7 @@ const translations = {
     no: "Нет",
     error: "Ошибка",
     success: "Успешно",
-    
+
     login: "Войти",
     signup: "Регистрация",
     email: "Электронная почта",
@@ -235,7 +241,7 @@ const translations = {
     mfaCode: "Код MFA",
     mfaVerify: "Подтвердить",
     accountNoRole: "Не удалось загрузить разрешения аккаунта.",
-    
+
     dashboard: "Панель управления",
     securityLogs: "Журнал безопасности",
     disputes: "Споры",
@@ -251,7 +257,10 @@ const translations = {
     myOrders: "Мои заказы",
     store: "Магазин",
     watchlist: "Избранное",
-    
+    pgpTool: "PGP Инструменты",
+    cipherNotes: "Зашифрованные заметки",
+    stealthMode: "Режим невидимости",
+
     customization: "Настройка",
     themeColor: "Цвет темы",
     font: "Шрифт",
@@ -281,7 +290,7 @@ const translations = {
     language: "Язык",
     selectLanguage: "Выбор языка",
     systemFont: "Системный шрифт",
-    
+
     red: "Красный",
     blue: "Синий",
     green: "Зелёный",
@@ -290,11 +299,11 @@ const translations = {
     cyan: "Бирюзовый",
     pink: "Розовый",
     yellow: "Жёлтый",
-    
+
     notifications: "Уведомления",
     noNotifications: "Нет уведомлений",
     markAllRead: "Отметить все как прочитанные",
-    
+
     supportedFormats: "Поддерживаемые форматы: JPG, PNG, GIF, WebP",
     maxFileSize: "Максимальный размер файла: 10МБ",
   },
@@ -339,14 +348,15 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = language;
   }, [language]);
 
-  const t = useCallback((key: TranslationKey): string => {
-    return translations[language][key] || translations.tr[key] || key;
-  }, [language]);
+  const t = useCallback(
+    (key: TranslationKey): string => {
+      return translations[language][key] || translations.tr[key] || key;
+    },
+    [language],
+  );
 
   return (
-    <I18nContext.Provider value={{ language, setLanguage, t }}>
-      {children}
-    </I18nContext.Provider>
+    <I18nContext.Provider value={{ language, setLanguage, t }}>{children}</I18nContext.Provider>
   );
 }
 

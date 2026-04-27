@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import PageShell from "@/components/PageShell";
 import { supabase } from "@/integrations/supabase/client";
-import { useParams } from "@/lib/router-shim";
+import { useNavigate, useParams } from "@/lib/router-shim";
 import { Star, User, Package, Shield, Clock, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import VendorRating from "@/components/VendorRating";
@@ -34,70 +34,107 @@ interface ProductRow {
 
 export default function VendorProfile() {
   const { vendorId } = useParams<{ vendorId: string }>();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<VendorProfileData | null>(null);
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [stats, setStats] = useState({ totalOrders: 0, completedOrders: 0, memberSince: "" });
   const [tab, setTab] = useState<"reviews" | "products">("reviews");
+  const isMounted = useRef(true);
 
   useEffect(() => {
+    isMounted.current = true;
     if (!vendorId) return;
     const load = async () => {
-      // Profile
-      const { data: p } = await (supabase as any)
-        .from("profiles")
-        .select("display_name, avatar_url, banner_url, bio")
-        .eq("user_id", vendorId)
-        .single();
-      if (p) setProfile(p as VendorProfileData);
+      try {
+        // Profile
+        const { data: p, error: pError } = await (supabase as any)
+          .from("profiles")
+          .select("display_name, avatar_url, banner_url, bio")
+          .eq("user_id", vendorId)
+          .maybeSingle();
 
-      // Reviews with buyer names
-      const { data: r } = await supabase
-        .from("vendor_ratings")
-        .select("id, rating, comment, created_at")
-        .eq("vendor_id", vendorId)
-        .order("created_at", { ascending: false })
-        .limit(50);
-      
-      if (r) {
-        // Get buyer display names
-        const buyerIds = [...new Set(r.map(() => ""))]; // placeholder
-        setReviews(r.map((rev: any) => ({
-          ...rev,
-          buyer_display_name: "Anonim Alıcı",
-        })));
+        if (!isMounted.current) return;
+        if (pError) {
+          if (import.meta.env.DEV) console.error("Error loading profile:", pError);
+        }
+        if (p) setProfile(p as VendorProfileData);
+
+        // Reviews with buyer names
+        const { data: r, error: rError } = await supabase
+          .from("vendor_ratings")
+          .select("id, rating, comment, created_at")
+          .eq("vendor_id", vendorId)
+          .order("created_at", { ascending: false })
+          .limit(50);
+
+        if (!isMounted.current) return;
+        if (rError) {
+          if (import.meta.env.DEV) console.error("Error loading reviews:", rError);
+        }
+        if (r) {
+          setReviews(
+            r.map((rev: any) => ({
+              ...rev,
+              buyer_display_name: "Anonim Alıcı",
+            })),
+          );
+        }
+
+        // Products
+        const { data: prod, error: prodError } = await supabase
+          .from("products")
+          .select("id, name, price, image_emoji, image_url, stock, category")
+          .eq("vendor_id", vendorId)
+          .gt("stock", 0);
+
+        if (!isMounted.current) return;
+        if (prodError) {
+          if (import.meta.env.DEV) console.error("Error loading products:", prodError);
+        }
+        if (prod) setProducts(prod as any);
+
+        // Stats
+        const { data: orders, error: ordersError } = await supabase
+          .from("orders")
+          .select("id, status, created_at, products:product_id(vendor_id)")
+          .order("created_at", { ascending: true });
+
+        if (!isMounted.current) return;
+        if (ordersError) {
+          if (import.meta.env.DEV) console.error("Error loading orders for stats:", ordersError);
+        }
+
+        const vendorOrders = (orders || []).filter((o: any) => o.products?.vendor_id === vendorId);
+        const { data: roleData, error: roleError } = await (supabase as any)
+          .from("user_roles")
+          .select("created_at")
+          .eq("user_id", vendorId)
+          .maybeSingle();
+
+        if (!isMounted.current) return;
+        if (roleError) {
+          if (import.meta.env.DEV) console.error("Error loading role data for stats:", roleError);
+        }
+
+        setStats({
+          totalOrders: vendorOrders.length,
+          completedOrders: vendorOrders.filter((o: any) => o.status === "completed").length,
+          memberSince: roleData?.created_at
+            ? new Date(roleData.created_at).toLocaleDateString("tr-TR", {
+                year: "numeric",
+                month: "long",
+              })
+            : "",
+        });
+      } catch (e) {
+        if (import.meta.env.DEV) console.error("Catch loading vendor profile data:", e);
       }
-
-      // Products
-      const { data: prod } = await supabase
-        .from("products")
-        .select("id, name, price, image_emoji, image_url, stock, category")
-        .eq("vendor_id", vendorId)
-        .gt("stock", 0);
-      if (prod) setProducts(prod as any);
-
-      // Stats
-      const { data: orders } = await supabase
-        .from("orders")
-        .select("id, status, created_at, products:product_id(vendor_id)")
-        .order("created_at", { ascending: true });
-      
-      const vendorOrders = (orders || []).filter((o: any) => o.products?.vendor_id === vendorId);
-      const { data: roleData } = await (supabase as any)
-        .from("user_roles")
-        .select("created_at")
-        .eq("user_id", vendorId)
-        .single();
-
-      setStats({
-        totalOrders: vendorOrders.length,
-        completedOrders: vendorOrders.filter((o: any) => o.status === "completed").length,
-        memberSince: roleData?.created_at
-          ? new Date(roleData.created_at).toLocaleDateString("tr-TR", { year: "numeric", month: "long" })
-          : "",
-      });
     };
     load();
+    return () => {
+      isMounted.current = false;
+    };
   }, [vendorId]);
 
   if (!profile || !vendorId) {
@@ -110,9 +147,10 @@ export default function VendorProfile() {
     );
   }
 
-  const avgRating = reviews.length > 0
-    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
-    : "0";
+  const avgRating =
+    reviews.length > 0
+      ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+      : "0";
 
   return (
     <PageShell>
@@ -128,7 +166,11 @@ export default function VendorProfile() {
         </div>
 
         {/* Profile Header */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-lg p-6 -mt-16 relative z-10 neon-border">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card rounded-lg p-6 -mt-16 relative z-10 neon-border"
+        >
           <div className="flex items-start gap-5">
             <div className="w-20 h-20 rounded-full bg-secondary border-2 border-primary/30 overflow-hidden flex items-center justify-center -mt-12 ring-4 ring-card">
               {profile.avatar_url ? (
@@ -163,12 +205,16 @@ export default function VendorProfile() {
             </div>
             <div className="text-center p-3 bg-secondary rounded-lg">
               <Shield className="w-4 h-4 text-green-500 mx-auto mb-1" />
-              <div className="text-lg font-mono font-bold text-foreground">{stats.completedOrders}</div>
+              <div className="text-lg font-mono font-bold text-foreground">
+                {stats.completedOrders}
+              </div>
               <div className="text-[10px] font-mono text-muted-foreground">Tamamlanan</div>
             </div>
             <div className="text-center p-3 bg-secondary rounded-lg">
               <Clock className="w-4 h-4 text-muted-foreground mx-auto mb-1" />
-              <div className="text-sm font-mono font-bold text-foreground">{stats.memberSince || "—"}</div>
+              <div className="text-sm font-mono font-bold text-foreground">
+                {stats.memberSince || "—"}
+              </div>
               <div className="text-[10px] font-mono text-muted-foreground">Üyelik</div>
             </div>
           </div>
@@ -179,7 +225,9 @@ export default function VendorProfile() {
           <button
             onClick={() => setTab("reviews")}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-mono transition-all ${
-              tab === "reviews" ? "bg-primary text-primary-foreground neon-glow-btn" : "bg-secondary text-muted-foreground hover:text-foreground"
+              tab === "reviews"
+                ? "bg-primary text-primary-foreground neon-glow-btn"
+                : "bg-secondary text-muted-foreground hover:text-foreground"
             }`}
           >
             <Star className="w-3.5 h-3.5" /> Yorumlar ({reviews.length})
@@ -187,7 +235,9 @@ export default function VendorProfile() {
           <button
             onClick={() => setTab("products")}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-mono transition-all ${
-              tab === "products" ? "bg-primary text-primary-foreground neon-glow-btn" : "bg-secondary text-muted-foreground hover:text-foreground"
+              tab === "products"
+                ? "bg-primary text-primary-foreground neon-glow-btn"
+                : "bg-secondary text-muted-foreground hover:text-foreground"
             }`}
           >
             <Package className="w-3.5 h-3.5" /> Ürünler ({products.length})
@@ -211,10 +261,15 @@ export default function VendorProfile() {
                       <div className="text-3xl font-mono font-bold text-primary">{avgRating}</div>
                       <div className="flex items-center gap-0.5 mt-1">
                         {[1, 2, 3, 4, 5].map((s) => (
-                          <Star key={s} className={`w-3 h-3 ${s <= Math.round(Number(avgRating)) ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground"}`} />
+                          <Star
+                            key={s}
+                            className={`w-3 h-3 ${s <= Math.round(Number(avgRating)) ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground"}`}
+                          />
                         ))}
                       </div>
-                      <div className="text-[10px] font-mono text-muted-foreground mt-1">{reviews.length} yorum</div>
+                      <div className="text-[10px] font-mono text-muted-foreground mt-1">
+                        {reviews.length} yorum
+                      </div>
                     </div>
                     <div className="flex-1 space-y-1">
                       {[5, 4, 3, 2, 1].map((star) => {
@@ -222,11 +277,18 @@ export default function VendorProfile() {
                         const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
                         return (
                           <div key={star} className="flex items-center gap-2">
-                            <span className="text-[10px] font-mono text-muted-foreground w-3">{star}</span>
+                            <span className="text-[10px] font-mono text-muted-foreground w-3">
+                              {star}
+                            </span>
                             <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
-                              <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${pct}%` }} />
+                              <div
+                                className="h-full bg-yellow-500 rounded-full"
+                                style={{ width: `${pct}%` }}
+                              />
                             </div>
-                            <span className="text-[10px] font-mono text-muted-foreground w-6 text-right">{count}</span>
+                            <span className="text-[10px] font-mono text-muted-foreground w-6 text-right">
+                              {count}
+                            </span>
                           </div>
                         );
                       })}
@@ -248,7 +310,9 @@ export default function VendorProfile() {
                         <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-mono text-primary">
                           A
                         </div>
-                        <span className="text-xs font-mono text-foreground">{r.buyer_display_name}</span>
+                        <span className="text-xs font-mono text-foreground">
+                          {r.buyer_display_name}
+                        </span>
                       </div>
                       <span className="text-[10px] font-mono text-muted-foreground">
                         {new Date(r.created_at).toLocaleDateString("tr-TR")}
@@ -256,7 +320,10 @@ export default function VendorProfile() {
                     </div>
                     <div className="flex items-center gap-0.5 mb-2">
                       {[1, 2, 3, 4, 5].map((s) => (
-                        <Star key={s} className={`w-3 h-3 ${s <= r.rating ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground"}`} />
+                        <Star
+                          key={s}
+                          className={`w-3 h-3 ${s <= r.rating ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground"}`}
+                        />
                       ))}
                     </div>
                     {r.comment && (
@@ -285,13 +352,15 @@ export default function VendorProfile() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.05 }}
                   className="glass-card rounded-lg p-4 hover:border-primary/30 transition-all cursor-pointer"
-                  onClick={() => window.location.href = `/product/${p.id}`}
+                  onClick={() => navigate(`/product/${p.id}`)}
                 >
                   <div className="text-2xl mb-2">{p.image_emoji || "📦"}</div>
                   <div className="text-sm font-mono font-medium text-foreground">{p.name}</div>
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-sm font-mono font-bold text-primary">{p.price} LTC</span>
-                    <span className="text-[10px] font-mono text-muted-foreground">Stok: {p.stock}</span>
+                    <span className="text-[10px] font-mono text-muted-foreground">
+                      Stok: {p.stock}
+                    </span>
                   </div>
                   {p.category && (
                     <span className="text-[9px] font-mono text-muted-foreground bg-secondary px-1.5 py-0.5 rounded mt-2 inline-block">

@@ -11,6 +11,7 @@ import { CustomizationProvider } from "@/lib/customizationContext";
 import { I18nProvider } from "@/lib/i18n";
 import { SessionTimerProvider } from "@/lib/sessionTimerContext";
 import { SecurityProvider } from "@/lib/securityContext";
+import { StealthProvider } from "@/lib/stealthContext";
 import BackgroundMusic from "@/components/BackgroundMusic";
 import SecurityHud from "@/components/SecurityHud";
 import TorWarningBanner from "@/components/TorWarningBanner";
@@ -26,10 +27,17 @@ export const Route = createRootRoute({
       { name: "description", content: "aeigsthub — yeraltı pazarı operasyon paneli" },
       { name: "robots", content: "noindex, nofollow, noarchive, nosnippet" },
       { name: "referrer", content: "no-referrer" },
-      { httpEquiv: "Content-Security-Policy", content: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" },
+      {
+        httpEquiv: "Content-Security-Policy",
+        content:
+          "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+      },
       { httpEquiv: "X-Frame-Options", content: "DENY" },
       { httpEquiv: "X-Content-Type-Options", content: "nosniff" },
-      { httpEquiv: "Permissions-Policy", content: "geolocation=(), camera=(), microphone=(), interest-cohort=()" },
+      {
+        httpEquiv: "Permissions-Policy",
+        content: "geolocation=(), camera=(), microphone=(), interest-cohort=()",
+      },
       { property: "og:title", content: "aeigsthub" },
       { name: "twitter:title", content: "aeigsthub" },
       { property: "og:description", content: "aeigsthub — yeraltı pazarı operasyon paneli" },
@@ -73,7 +81,9 @@ function AuthGuard({ children }: { children: ReactNode }) {
         <div className="glass-card neon-border rounded-lg p-6 w-full max-w-md text-center space-y-4">
           <div>
             <h1 className="text-2xl font-mono font-bold text-primary neon-text">aeigsthub</h1>
-            <p className="text-xs font-mono text-muted-foreground mt-2">Hesap yetkisi yüklenemedi.</p>
+            <p className="text-xs font-mono text-muted-foreground mt-2">
+              Hesap yetkisi yüklenemedi.
+            </p>
           </div>
           <button
             onClick={() => void logout()}
@@ -100,12 +110,14 @@ function RootComponent() {
               <I18nProvider>
                 <CustomizationProvider>
                   <BackgroundProvider>
-                    <TorWarningBanner />
-                    <AuthGuard>
-                      <Outlet />
-                    </AuthGuard>
-                    <SecurityHud />
-                    <BackgroundMusic />
+                    <StealthProvider>
+                      <TorWarningBanner />
+                      <AuthGuard>
+                        <Outlet />
+                      </AuthGuard>
+                      <SecurityHud />
+                      <BackgroundMusic />
+                    </StealthProvider>
                   </BackgroundProvider>
                 </CustomizationProvider>
               </I18nProvider>

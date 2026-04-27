@@ -12,7 +12,13 @@ interface Props {
   onRated: () => void;
 }
 
-export default function RateOrderDialog({ orderId, vendorId, productName, onClose, onRated }: Props) {
+export default function RateOrderDialog({
+  orderId,
+  vendorId,
+  productName,
+  onClose,
+  onRated,
+}: Props) {
   const { user } = useAuth();
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
@@ -41,11 +47,19 @@ export default function RateOrderDialog({ orderId, vendorId, productName, onClos
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="glass-card neon-border rounded-lg p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="glass-card neon-border rounded-lg p-6 w-full max-w-sm"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-mono font-bold text-primary">Satıcıyı Puanla</h3>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <X className="w-4 h-4" />
+          </button>
         </div>
         <p className="text-xs text-muted-foreground font-mono mb-4">{productName}</p>
 
@@ -58,7 +72,9 @@ export default function RateOrderDialog({ orderId, vendorId, productName, onClos
               onClick={() => setRating(s)}
               className="p-1 transition-transform hover:scale-110"
             >
-              <Star className={`w-7 h-7 ${(hover || rating) >= s ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground"}`} />
+              <Star
+                className={`w-7 h-7 ${(hover || rating) >= s ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground"}`}
+              />
             </button>
           ))}
         </div>

@@ -3,6 +3,7 @@ import AppSidebar from "./AppSidebar";
 import SessionTimerBadge from "./SessionTimerBadge";
 import KizilyurekAssistant from "./KizilyurekAssistant";
 import CommandPalette from "./CommandPalette";
+import NewsTicker from "./NewsTicker";
 import { useBackground } from "@/lib/backgroundContext";
 import { useCustomization } from "@/lib/customizationContext";
 
@@ -19,7 +20,8 @@ export default function PageShell({ children }: { children: ReactNode }) {
 
   const collapsed = settings.sidebarCollapsed;
   const isRight = settings.sidebarPosition === "right";
-  const margin = collapsed ? (isRight ? "mr-16" : "ml-16") : (isRight ? "mr-60" : "ml-60");
+  const margin = collapsed ? (isRight ? "mr-16" : "ml-16") : isRight ? "mr-60" : "ml-60";
+  const topPadding = "pt-8";
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -33,8 +35,13 @@ export default function PageShell({ children }: { children: ReactNode }) {
         />
       )}
       <AppSidebar />
+      <NewsTicker />
       <SessionTimerBadge />
-      <main className={`${margin} p-6 relative z-10 transition-[margin] duration-150`}>{children}</main>
+      <main
+        className={`${margin} ${topPadding} p-6 relative z-10 transition-[margin] duration-150`}
+      >
+        {children}
+      </main>
       <KizilyurekAssistant
         position={isRight ? "bottom-right" : "bottom-left"}
         open={assistantOpen}

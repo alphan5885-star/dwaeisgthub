@@ -10,7 +10,14 @@ interface AuthState {
   loading: boolean;
   mfaChallenge: { factorId: string; challengeId: string } | null;
   login: (email: string, password: string) => Promise<string | null>;
-  signup: (email: string, password: string, displayName: string, role: "vendor" | "buyer", withdrawPin?: string, pgpKey?: string) => Promise<string | null>;
+  signup: (
+    email: string,
+    password: string,
+    displayName: string,
+    role: "vendor" | "buyer",
+    withdrawPin?: string,
+    pgpKey?: string,
+  ) => Promise<string | null>;
   verifyMfa: (code: string) => Promise<string | null>;
   logout: () => Promise<void>;
 }
@@ -21,7 +28,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<Role>(null);
   const [loading, setLoading] = useState(true);
-  const [mfaChallenge, setMfaChallenge] = useState<{ factorId: string; challengeId: string } | null>(null);
+  const [mfaChallenge, setMfaChallenge] = useState<{
+    factorId: string;
+    challengeId: string;
+  } | null>(null);
   const roleRequestIdRef = useRef(0);
 
   useEffect(() => {
@@ -67,7 +77,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       applySession(session?.user ?? null);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       applySession(session?.user ?? null);
     });
 
@@ -100,11 +112,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Check if MFA is required
     const { data: factorsData } = await supabase.auth.mfa.listFactors();
-    const verifiedFactors = factorsData?.totp?.filter(f => f.status === "verified") || [];
+    const verifiedFactors = factorsData?.totp?.filter((f) => f.status === "verified") || [];
 
     if (verifiedFactors.length > 0) {
       const factor = verifiedFactors[0];
-      const { data: challenge, error: challengeErr } = await supabase.auth.mfa.challenge({ factorId: factor.id });
+      const { data: challenge, error: challengeErr } = await supabase.auth.mfa.challenge({
+        factorId: factor.id,
+      });
       if (challengeErr) return challengeErr.message;
       setMfaChallenge({ factorId: factor.id, challengeId: challenge.id });
       return "MFA_REQUIRED";
@@ -119,7 +133,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return null;
   };
-
 
   const verifyMfa = async (code: string): Promise<string | null> => {
     if (!mfaChallenge) return "No MFA challenge active";
@@ -158,9 +171,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     if (error) return error.message;
-    if (!data.session) return "E-posta doğrulama bağlantısı gönderildi. Onayladıktan sonra giriş yapabilirsiniz.";
+    if (!data.session)
+      return "E-posta doğrulama bağlantısı gönderildi. Onayladıktan sonra giriş yapabilirsiniz.";
 
-    const { error: roleError } = await supabase.rpc("assign_role_on_signup", { _role: selectedRole });
+    const { error: roleError } = await supabase.rpc("assign_role_on_signup", {
+      _role: selectedRole,
+    });
     if (roleError) return roleError.message;
 
     // Hash PIN and persist along with PGP key on profile
@@ -169,7 +185,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (withdrawPin && /^\d{6}$/.test(withdrawPin)) {
         const buf = new TextEncoder().encode(withdrawPin);
         const hash = await crypto.subtle.digest("SHA-256", buf);
-        pinHash = Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
+        pinHash = Array.from(new Uint8Array(hash))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
       }
       const uid = data.session.user.id;
       const update: { withdraw_pin_hash?: string; pgp_key?: string } = {};
@@ -189,7 +207,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    const isDeadManArmed = localStorage.getItem("dead-man-mode") === "armed";
     await supabase.auth.signOut();
+
+    if (isDeadManArmed) {
+      localStorage.clear();
+      sessionStorage.clear();
+      // Cookies are harder to clear without specific names, but this covers most
+    }
+
     roleRequestIdRef.current += 1;
     setUser(null);
     setRole(null);
@@ -198,7 +224,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, role, loading, mfaChallenge, login, signup, verifyMfa, logout }}>
+    <AuthContext.Provider
+      value={{ user, role, loading, mfaChallenge, login, signup, verifyMfa, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

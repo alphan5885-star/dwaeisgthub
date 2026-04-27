@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import PageShell from "@/components/PageShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/authContext";
@@ -22,51 +22,129 @@ interface OrderSummary {
 
 export default function VendorWalletPage() {
   const { user } = useAuth();
-  const [wallet, setWallet] = useState<WalletData>({ pending: 0, available: 0, commission: 0, total: 0 });
-  const [orderSummary, setOrderSummary] = useState<OrderSummary>({ totalOrders: 0, completedOrders: 0, pendingOrders: 0, totalRevenue: 0, totalCommission: 0 });
+  const [wallet, setWallet] = useState<WalletData>({
+    pending: 0,
+    available: 0,
+    commission: 0,
+    total: 0,
+  });
+  const [orderSummary, setOrderSummary] = useState<OrderSummary>({
+    totalOrders: 0,
+    completedOrders: 0,
+    pendingOrders: 0,
+    totalRevenue: 0,
+    totalCommission: 0,
+  });
   const [withdrawAddr, setWithdrawAddr] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
 
+  const isMounted = useRef(true);
+
   useEffect(() => {
     if (!user) return;
+    isMounted.current = true;
     const fetchAll = async () => {
-      // Wallet data
-      const { data: walletData } = await supabase.from("vendor_wallets").select("*").eq("vendor_id", user.id).single();
-      if (walletData) setWallet({ pending: Number(walletData.pending), available: Number(walletData.available), commission: Number(walletData.commission), total: Number(walletData.total) });
+      try {
+        // Wallet data
+        const { data: walletData, error: walletError } = await supabase
+          .from("vendor_wallets")
+          .select("*")
+          .eq("vendor_id", user.id)
+          .maybeSingle();
 
-      // Orders summary
-      const { data: orders } = await supabase.from("orders").select("id, amount, status, service_fee, created_at, product_id").eq("vendor_id", user.id).order("created_at", { ascending: false });
-      if (orders) {
-        const completed = orders.filter(o => o.status === "completed" || o.status === "delivered");
-        const pending = orders.filter(o => o.status === "paid" || o.status === "pending");
-        const totalRev = completed.reduce((s, o) => s + Number(o.amount), 0);
-        const totalComm = orders.reduce((s, o) => s + Number((o as any).service_fee || 0), 0);
-        setOrderSummary({
-          totalOrders: orders.length,
-          completedOrders: completed.length,
-          pendingOrders: pending.length,
-          totalRevenue: totalRev,
-          totalCommission: totalComm,
-        });
-        setRecentOrders(orders.slice(0, 10));
+        if (!isMounted.current) return;
+
+        if (walletError) {
+          if (import.meta.env.DEV) console.error("Error fetching vendor wallet:", walletError);
+        } else if (walletData) {
+          setWallet({
+            pending: Number(walletData.pending),
+            available: Number(walletData.available),
+            commission: Number(walletData.commission),
+            total: Number(walletData.total),
+          });
+        }
+
+        // Orders summary
+        const { data: orders, error: ordersError } = await supabase
+          .from("orders")
+          .select("id, amount, status, service_fee, created_at, product_id")
+          .eq("vendor_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (!isMounted.current) return;
+
+        if (ordersError) {
+          if (import.meta.env.DEV)
+            console.error("Error fetching vendor orders summary:", ordersError);
+          return;
+        }
+
+        if (orders) {
+          const completed = orders.filter(
+            (o) => o.status === "completed" || o.status === "delivered",
+          );
+          const pending = orders.filter((o) => o.status === "paid" || o.status === "pending");
+          const totalRev = completed.reduce((s, o) => s + Number(o.amount), 0);
+          const totalComm = orders.reduce((s, o) => s + Number((o as any).service_fee || 0), 0);
+          setOrderSummary({
+            totalOrders: orders.length,
+            completedOrders: completed.length,
+            pendingOrders: pending.length,
+            totalRevenue: totalRev,
+            totalCommission: totalComm,
+          });
+          setRecentOrders(orders.slice(0, 10));
+        }
+      } catch (e) {
+        if (import.meta.env.DEV) console.error("Catch error in VendorWallet fetchAll:", e);
       }
     };
     fetchAll();
+    return () => {
+      isMounted.current = false;
+    };
   }, [user]);
 
   const handleWithdraw = () => {
     if (!withdrawAddr || !withdrawAmount) return;
-    toast.success(`${withdrawAmount} LTC çekim talebi oluşturuldu.`);
-    setWithdrawAddr("");
-    setWithdrawAmount("");
+    if (isMounted.current) {
+      toast.success(`${withdrawAmount} LTC çekim talebi oluşturuldu.`);
+      setWithdrawAddr("");
+      setWithdrawAmount("");
+    }
   };
 
   const statCards = [
-    { label: "Bekleyen Bakiye", value: wallet.pending, icon: Clock, color: "text-yellow-500", bg: "bg-yellow-500/10" },
-    { label: "Çekilebilir Bakiye", value: wallet.available, icon: CheckCircle, color: "text-green-500", bg: "bg-green-500/10" },
-    { label: "Sistem Kesintisi (%5)", value: orderSummary.totalCommission, icon: Percent, color: "text-primary", bg: "bg-primary/10" },
-    { label: "Toplam Kazanç", value: orderSummary.totalRevenue, icon: TrendingUp, color: "text-foreground", bg: "bg-secondary" },
+    {
+      label: "Bekleyen Bakiye",
+      value: wallet.pending,
+      icon: Clock,
+      color: "text-yellow-500",
+      bg: "bg-yellow-500/10",
+    },
+    {
+      label: "Çekilebilir Bakiye",
+      value: wallet.available,
+      icon: CheckCircle,
+      color: "text-green-500",
+      bg: "bg-green-500/10",
+    },
+    {
+      label: "Sistem Kesintisi (%5)",
+      value: orderSummary.totalCommission,
+      icon: Percent,
+      color: "text-primary",
+      bg: "bg-primary/10",
+    },
+    {
+      label: "Toplam Kazanç",
+      value: orderSummary.totalRevenue,
+      icon: TrendingUp,
+      color: "text-foreground",
+      bg: "bg-secondary",
+    },
   ];
 
   const orderStatCards = [
@@ -89,7 +167,9 @@ export default function VendorWalletPage() {
                 <item.icon className={`w-4 h-4 ${item.color}`} />
               </div>
             </div>
-            <div className={`text-3xl font-mono font-bold ${item.color}`}>{item.value.toFixed(2)} <span className="text-sm">LTC</span></div>
+            <div className={`text-3xl font-mono font-bold ${item.color}`}>
+              {item.value.toFixed(2)} <span className="text-sm">LTC</span>
+            </div>
           </div>
         ))}
       </div>
@@ -111,25 +191,42 @@ export default function VendorWalletPage() {
           <h2 className="text-sm font-mono text-muted-foreground mb-3">Son Siparişler</h2>
           <div className="space-y-2">
             {recentOrders.map((order) => (
-              <div key={order.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+              <div
+                key={order.id}
+                className="flex items-center justify-between py-2 border-b border-border last:border-0"
+              >
                 <div>
-                  <div className="text-xs font-mono text-foreground">#{order.id.slice(0, 8).toUpperCase()}</div>
+                  <div className="text-xs font-mono text-foreground">
+                    #{order.id.slice(0, 8).toUpperCase()}
+                  </div>
                   <div className="text-[10px] font-mono text-muted-foreground">
                     {new Date(order.created_at).toLocaleDateString("tr-TR")}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono font-bold text-primary">{Number(order.amount).toFixed(2)} LTC</span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-mono ${
-                    order.status === "completed" || order.status === "delivered" ? "bg-green-500/10 text-green-500" :
-                    order.status === "paid" ? "bg-blue-500/10 text-blue-400" :
-                    order.status === "pending" ? "bg-yellow-500/10 text-yellow-500" :
-                    "bg-secondary text-muted-foreground"
-                  }`}>
-                    {order.status === "completed" ? "Tamamlandı" :
-                     order.status === "delivered" ? "Teslim Edildi" :
-                     order.status === "paid" ? "Ödendi" :
-                     order.status === "pending" ? "Beklemede" : order.status}
+                  <span className="text-xs font-mono font-bold text-primary">
+                    {Number(order.amount).toFixed(2)} LTC
+                  </span>
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono ${
+                      order.status === "completed" || order.status === "delivered"
+                        ? "bg-green-500/10 text-green-500"
+                        : order.status === "paid"
+                          ? "bg-blue-500/10 text-blue-400"
+                          : order.status === "pending"
+                            ? "bg-yellow-500/10 text-yellow-500"
+                            : "bg-secondary text-muted-foreground"
+                    }`}
+                  >
+                    {order.status === "completed"
+                      ? "Tamamlandı"
+                      : order.status === "delivered"
+                        ? "Teslim Edildi"
+                        : order.status === "paid"
+                          ? "Ödendi"
+                          : order.status === "pending"
+                            ? "Beklemede"
+                            : order.status}
                   </span>
                 </div>
               </div>
@@ -142,9 +239,26 @@ export default function VendorWalletPage() {
       <div className="glass-card rounded-lg p-4">
         <h2 className="text-sm font-mono text-muted-foreground mb-3">Çekim Talebi</h2>
         <div className="flex gap-3">
-          <input value={withdrawAddr} onChange={(e) => setWithdrawAddr(e.target.value)} placeholder="LTC Cüzdan Adresi" className="flex-1 bg-secondary border border-border rounded px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
-          <input value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} placeholder="Miktar" type="number" step="0.01" className="w-32 bg-secondary border border-border rounded px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
-          <button onClick={handleWithdraw} className="px-4 py-2 bg-primary text-primary-foreground text-xs font-mono rounded font-bold neon-glow-btn">Çek</button>
+          <input
+            value={withdrawAddr}
+            onChange={(e) => setWithdrawAddr(e.target.value)}
+            placeholder="LTC Cüzdan Adresi"
+            className="flex-1 bg-secondary border border-border rounded px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          <input
+            value={withdrawAmount}
+            onChange={(e) => setWithdrawAmount(e.target.value)}
+            placeholder="Miktar"
+            type="number"
+            step="0.01"
+            className="w-32 bg-secondary border border-border rounded px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          <button
+            onClick={handleWithdraw}
+            className="px-4 py-2 bg-primary text-primary-foreground text-xs font-mono rounded font-bold neon-glow-btn"
+          >
+            Çek
+          </button>
         </div>
       </div>
     </PageShell>

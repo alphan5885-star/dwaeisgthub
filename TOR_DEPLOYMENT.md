@@ -27,16 +27,16 @@ Manuel kurulum için aşağıdaki adımları izle.
 
 ## VPS vs Raspberry Pi — Hangisi?
 
-| Kriter | VPS (Njalla/Cockbox) | Raspberry Pi (ev) |
-|--------|----------------------|-------------------|
-| **Maliyet** | ~10-30 €/ay (XMR) | Donanım ~70 € + elektrik |
-| **Hız** | Yüksek (1Gbps) | Ev internetine bağlı |
-| **Anonimlik** | Sağlayıcıya güven gerekir | Sadece Tor → IP hiç sızmaz |
+| Kriter            | VPS (Njalla/Cockbox)          | Raspberry Pi (ev)             |
+| ----------------- | ----------------------------- | ----------------------------- |
+| **Maliyet**       | ~10-30 €/ay (XMR)             | Donanım ~70 € + elektrik      |
+| **Hız**           | Yüksek (1Gbps)                | Ev internetine bağlı          |
+| **Anonimlik**     | Sağlayıcıya güven gerekir     | Sadece Tor → IP hiç sızmaz    |
 | **Fiziksel risk** | Sağlayıcı disk imajı alabilir | Evinde — fiziksel arama riski |
-| **Uptime** | %99.9 | Elektrik/internet kesintisi |
-| **Yedek** | Snapshot kolay | Disk/SD imajı manuel |
-| **Bandwidth** | Sınırsız (genelde) | ISP'nin upload limiti |
-| **Kim için?** | Yüksek trafik, küresel | Küçük topluluk, düşük profil |
+| **Uptime**        | %99.9                         | Elektrik/internet kesintisi   |
+| **Yedek**         | Snapshot kolay                | Disk/SD imajı manuel          |
+| **Bandwidth**     | Sınırsız (genelde)            | ISP'nin upload limiti         |
+| **Kim için?**     | Yüksek trafik, küresel        | Küçük topluluk, düşük profil  |
 
 **Önerim:** Başlangıçta VPS (kolay), trafik artarsa kendi Pi/server (kontrol).
 
@@ -112,6 +112,7 @@ node .output/server/index.mjs   # port 3000
 ```
 
 PM2 ile süreklilik:
+
 ```bash
 npm i -g pm2
 pm2 start ".output/server/index.mjs" --name aeigsth
@@ -160,16 +161,16 @@ cd mkp224o && ./autogen.sh && ./configure && make
 
 ## 6. Deanonimizasyon riskini azaltma
 
-| Risk | Önlem |
-|------|-------|
-| **Time correlation** | Sistem saati = UTC, NTP bile Tor üzerinden (`tor-resolve`) |
-| **DNS leak** | nginx/uygulama içinde harici domain çağrısı yapma. CDN, Google Fonts, harici favicon, harici görsel — **hepsi yasak**. Hepsi self-host edilecek. |
-| **WebRTC / IP leak** | Uygulamada `RTCPeerConnection` kullanma. Tor Browser zaten engeller. |
-| **JS fingerprint** | Canvas/WebGL/AudioContext fingerprint — Tor Browser default ayarda korur, ama uygulamayı bunlardan **bağımsız** tasarla. |
-| **Server header leak** | nginx'te `server_tokens off;`, `more_clear_headers Server;` |
-| **Error stack trace** | Production build, source map kapalı (`build.sourcemap: false`) |
-| **Account correlation** | Aynı PGP key / aynı kullanıcı adı clearnet'te varsa → bağ kurulur. Tüm hesaplar Tor-only ve sıfırdan. |
-| **File metadata** | Yüklenen görsel/PDF EXIF'leri sunucu tarafında **mutlaka** strip et (exiftool, sharp metadata: false). |
+| Risk                    | Önlem                                                                                                                                            |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Time correlation**    | Sistem saati = UTC, NTP bile Tor üzerinden (`tor-resolve`)                                                                                       |
+| **DNS leak**            | nginx/uygulama içinde harici domain çağrısı yapma. CDN, Google Fonts, harici favicon, harici görsel — **hepsi yasak**. Hepsi self-host edilecek. |
+| **WebRTC / IP leak**    | Uygulamada `RTCPeerConnection` kullanma. Tor Browser zaten engeller.                                                                             |
+| **JS fingerprint**      | Canvas/WebGL/AudioContext fingerprint — Tor Browser default ayarda korur, ama uygulamayı bunlardan **bağımsız** tasarla.                         |
+| **Server header leak**  | nginx'te `server_tokens off;`, `more_clear_headers Server;`                                                                                      |
+| **Error stack trace**   | Production build, source map kapalı (`build.sourcemap: false`)                                                                                   |
+| **Account correlation** | Aynı PGP key / aynı kullanıcı adı clearnet'te varsa → bağ kurulur. Tüm hesaplar Tor-only ve sıfırdan.                                            |
+| **File metadata**       | Yüklenen görsel/PDF EXIF'leri sunucu tarafında **mutlaka** strip et (exiftool, sharp metadata: false).                                           |
 
 ---
 
@@ -257,16 +258,16 @@ Bu rehber **operasyonel güvenlik** ve **mahremiyet** için yazılmıştır (whi
 
 ## 11. Yaygın hatalar ve çözümleri
 
-| Hata | Sebep | Çözüm |
-|------|-------|-------|
-| `cat: hostname: No such file` | tor servis henüz hidden service üretmedi | `systemctl status tor` → 30sn bekle, log'a bak: `journalctl -u tor -n 50` |
-| `Permission denied: /var/lib/tor/aeigsth` | Yanlış sahiplik | `chown -R debian-tor:debian-tor /var/lib/tor/aeigsth && chmod 700 /var/lib/tor/aeigsth` |
-| `nginx: bind to 0.0.0.0:80 failed` | Apache veya başka servis 80'de | `lsof -i :80` ile bul, durdur. `listen 127.0.0.1:80` kullan. |
-| Tor Browser "Onion site not found" | torrc yanlış / tor restart edilmedi | `tor --verify-config` → `systemctl restart tor` |
-| `502 Bad Gateway` | Node app çalışmıyor | `pm2 status` → `pm2 logs aeigsth` |
-| Supabase `connection refused` | Docker container ayakta değil | `cd /opt/aeigsth/supabase/docker && docker compose ps` |
-| `.onion` çok yavaş | Normal — Tor 6 hop | Hidden Service Onionbalance ile load-balance et |
-| Build başarısız: `vite not found` | `npm install` yapılmadı | `cd /opt/aeigsth/app && npm install` |
+| Hata                                      | Sebep                                    | Çözüm                                                                                   |
+| ----------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------- |
+| `cat: hostname: No such file`             | tor servis henüz hidden service üretmedi | `systemctl status tor` → 30sn bekle, log'a bak: `journalctl -u tor -n 50`               |
+| `Permission denied: /var/lib/tor/aeigsth` | Yanlış sahiplik                          | `chown -R debian-tor:debian-tor /var/lib/tor/aeigsth && chmod 700 /var/lib/tor/aeigsth` |
+| `nginx: bind to 0.0.0.0:80 failed`        | Apache veya başka servis 80'de           | `lsof -i :80` ile bul, durdur. `listen 127.0.0.1:80` kullan.                            |
+| Tor Browser "Onion site not found"        | torrc yanlış / tor restart edilmedi      | `tor --verify-config` → `systemctl restart tor`                                         |
+| `502 Bad Gateway`                         | Node app çalışmıyor                      | `pm2 status` → `pm2 logs aeigsth`                                                       |
+| Supabase `connection refused`             | Docker container ayakta değil            | `cd /opt/aeigsth/supabase/docker && docker compose ps`                                  |
+| `.onion` çok yavaş                        | Normal — Tor 6 hop                       | Hidden Service Onionbalance ile load-balance et                                         |
+| Build başarısız: `vite not found`         | `npm install` yapılmadı                  | `cd /opt/aeigsth/app && npm install`                                                    |
 
 ## 12. Logsuz monitoring
 

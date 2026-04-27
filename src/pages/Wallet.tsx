@@ -13,14 +13,18 @@ const VALID_MS = 24 * 60 * 60 * 1000;
 function generateLtcAddress(): string {
   const bytes = new Uint8Array(20);
   crypto.getRandomValues(bytes);
-  const hex = Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+  const hex = Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
   return `ltc1q${hex}`;
 }
 
 function generateXmrAddress(): string {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
-  const hex = Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+  const hex = Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
   return `4${hex}`;
 }
 
@@ -46,7 +50,10 @@ export default function Wallet() {
         const p = JSON.parse(raw);
         setAddress(p.address);
         setCreatedAt(p.createdAt);
-      } catch {}
+      } catch {
+        setAddress(null);
+        setCreatedAt(null);
+      }
     }
   }, [key]);
 
@@ -79,7 +86,9 @@ export default function Wallet() {
       <div className="max-w-2xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-mono font-bold text-primary neon-text">Wallet</h1>
-          <p className="text-xs font-mono text-muted-foreground mt-1">Kişisel LTC ödeme adresi yönetimi</p>
+          <p className="text-xs font-mono text-muted-foreground mt-1">
+            Kişisel LTC ödeme adresi yönetimi
+          </p>
         </div>
 
         <div className="glass-card neon-border rounded-lg p-6 space-y-4">
@@ -109,18 +118,24 @@ export default function Wallet() {
 
               <div
                 className={`flex items-center gap-2 px-3 py-2 rounded text-xs font-mono ${
-                  expired ? "bg-destructive/20 border border-destructive text-destructive" : "bg-muted/40 text-muted-foreground"
+                  expired
+                    ? "bg-destructive/20 border border-destructive text-destructive"
+                    : "bg-muted/40 text-muted-foreground"
                 }`}
               >
                 <Clock className="w-3 h-3 shrink-0" />
-                {expired ? "Bu adresin süresi DOLDU. Yeni adres üretin." : `Geçerlilik: ${fmtCountdown(remaining)}`}
+                {expired
+                  ? "Bu adresin süresi DOLDU. Yeni adres üretin."
+                  : `Geçerlilik: ${fmtCountdown(remaining)}`}
               </div>
             </>
           )}
 
           <div className="flex items-start gap-2 px-3 py-2 rounded bg-destructive/10 border border-destructive/40 text-xs font-mono text-destructive">
             <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-            <span>Bu adres 24 saat geçerlidir. Süresi dolduktan sonra ödeme yaparsanız fonlar kaybolur.</span>
+            <span>
+              Bu adres 24 saat geçerlidir. Süresi dolduktan sonra ödeme yaparsanız fonlar kaybolur.
+            </span>
           </div>
           <div className="flex items-start gap-2 px-3 py-2 rounded bg-primary/10 border border-primary/40 text-xs font-mono text-primary">
             <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />

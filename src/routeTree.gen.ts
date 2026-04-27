@@ -15,6 +15,7 @@ import { Route as VendorRouteImport } from './routes/vendor'
 import { Route as TransactionsRouteImport } from './routes/transactions'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PgpToolRouteImport } from './routes/pgp-tool'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as MarketRouteImport } from './routes/market'
 import { Route as ForumRouteImport } from './routes/forum'
@@ -57,6 +58,11 @@ const SecurityRoute = SecurityRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PgpToolRoute = PgpToolRouteImport.update({
+  id: '/pgp-tool',
+  path: '/pgp-tool',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrdersRoute = OrdersRouteImport.update({
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/forum': typeof ForumRoute
   '/market': typeof MarketRoute
   '/orders': typeof OrdersRoute
+  '/pgp-tool': typeof PgpToolRoute
   '/profile': typeof ProfileRoute
   '/security': typeof SecurityRoute
   '/transactions': typeof TransactionsRoute
@@ -153,6 +160,7 @@ export interface FileRoutesByTo {
   '/forum': typeof ForumRoute
   '/market': typeof MarketRoute
   '/orders': typeof OrdersRoute
+  '/pgp-tool': typeof PgpToolRoute
   '/profile': typeof ProfileRoute
   '/security': typeof SecurityRoute
   '/transactions': typeof TransactionsRoute
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/forum': typeof ForumRoute
   '/market': typeof MarketRoute
   '/orders': typeof OrdersRoute
+  '/pgp-tool': typeof PgpToolRoute
   '/profile': typeof ProfileRoute
   '/security': typeof SecurityRoute
   '/transactions': typeof TransactionsRoute
@@ -198,6 +207,7 @@ export interface FileRouteTypes {
     | '/forum'
     | '/market'
     | '/orders'
+    | '/pgp-tool'
     | '/profile'
     | '/security'
     | '/transactions'
@@ -219,6 +229,7 @@ export interface FileRouteTypes {
     | '/forum'
     | '/market'
     | '/orders'
+    | '/pgp-tool'
     | '/profile'
     | '/security'
     | '/transactions'
@@ -240,6 +251,7 @@ export interface FileRouteTypes {
     | '/forum'
     | '/market'
     | '/orders'
+    | '/pgp-tool'
     | '/profile'
     | '/security'
     | '/transactions'
@@ -262,6 +274,7 @@ export interface RootRouteChildren {
   ForumRoute: typeof ForumRoute
   MarketRoute: typeof MarketRoute
   OrdersRoute: typeof OrdersRoute
+  PgpToolRoute: typeof PgpToolRoute
   ProfileRoute: typeof ProfileRoute
   SecurityRoute: typeof SecurityRoute
   TransactionsRoute: typeof TransactionsRoute
@@ -313,6 +326,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pgp-tool': {
+      id: '/pgp-tool'
+      path: '/pgp-tool'
+      fullPath: '/pgp-tool'
+      preLoaderRoute: typeof PgpToolRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/orders': {
@@ -445,6 +465,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForumRoute: ForumRoute,
   MarketRoute: MarketRoute,
   OrdersRoute: OrdersRoute,
+  PgpToolRoute: PgpToolRoute,
   ProfileRoute: ProfileRoute,
   SecurityRoute: SecurityRoute,
   TransactionsRoute: TransactionsRoute,

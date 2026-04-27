@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import PageShell from "@/components/PageShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/authContext";
@@ -26,18 +26,35 @@ export default function Transactions() {
   const { user } = useAuth();
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const isMounted = useRef(true);
 
   useEffect(() => {
+    isMounted.current = true;
     if (!user) return;
-    supabase
-      .from("transactions")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(100)
-      .then(({ data }) => {
+    const fetchTransactions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("transactions")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(30);
+
+        if (!isMounted.current) return;
+        if (error) {
+          if (import.meta.env.DEV) console.error("Error fetching transactions:", error);
+          return;
+        }
         if (data) setTxs(data as Transaction[]);
-        setLoading(false);
-      });
+      } catch (e) {
+        if (import.meta.env.DEV) console.error("Catch fetching transactions:", e);
+      } finally {
+        if (isMounted.current) setLoading(false);
+      }
+    };
+    fetchTransactions();
+    return () => {
+      isMounted.current = false;
+    };
   }, [user]);
 
   return (
@@ -51,12 +68,23 @@ export default function Transactions() {
       ) : (
         <div className="space-y-2">
           {txs.map((tx) => (
-            <div key={tx.id} className="glass-card rounded-lg p-4 flex items-center justify-between">
+            <div
+              key={tx.id}
+              className="glass-card rounded-lg p-4 flex items-center justify-between"
+            >
               <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  tx.amount >= 0 ? "bg-green-500/10 text-green-500" : "bg-destructive/10 text-destructive"
-                }`}>
-                  {tx.amount >= 0 ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    tx.amount >= 0
+                      ? "bg-green-500/10 text-green-500"
+                      : "bg-destructive/10 text-destructive"
+                  }`}
+                >
+                  {tx.amount >= 0 ? (
+                    <ArrowDownLeft className="w-4 h-4" />
+                  ) : (
+                    <ArrowUpRight className="w-4 h-4" />
+                  )}
                 </div>
                 <div>
                   <div className="text-sm font-mono font-bold text-foreground">
@@ -66,8 +94,11 @@ export default function Transactions() {
                 </div>
               </div>
               <div className="text-right">
-                <div className={`text-sm font-mono font-bold ${tx.amount >= 0 ? "text-green-500" : "text-destructive"}`}>
-                  {tx.amount >= 0 ? "+" : ""}{tx.amount} LTC
+                <div
+                  className={`text-sm font-mono font-bold ${tx.amount >= 0 ? "text-green-500" : "text-destructive"}`}
+                >
+                  {tx.amount >= 0 ? "+" : ""}
+                  {tx.amount} LTC
                 </div>
                 <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-mono">
                   <Clock className="w-3 h-3" />

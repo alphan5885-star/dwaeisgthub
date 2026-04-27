@@ -2,7 +2,17 @@ import { useCustomization, CustomizationSettings } from "@/lib/customizationCont
 import { useBackground } from "@/lib/backgroundContext";
 import { useI18n, languageOptions, TranslationKey } from "@/lib/i18n";
 import PageShell from "@/components/PageShell";
-import { Palette, Type, Sparkles, PanelLeft, RotateCcw, ImagePlus, Trash2, Wallpaper, Globe } from "lucide-react";
+import {
+  Palette,
+  Type,
+  Sparkles,
+  PanelLeft,
+  RotateCcw,
+  ImagePlus,
+  Trash2,
+  Wallpaper,
+  Globe,
+} from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useRef, forwardRef } from "react";
@@ -46,13 +56,14 @@ const Section = forwardRef<HTMLDivElement, { icon: any; title: string; children:
         {children}
       </motion.div>
     );
-  }
+  },
 );
 Section.displayName = "Section";
 
 export default function Customization() {
   const { settings, updateSettings, resetSettings } = useCustomization();
-  const { backgroundUrl, setBackgroundUrl, backgroundOpacity, setBackgroundOpacity } = useBackground();
+  const { backgroundUrl, setBackgroundUrl, backgroundOpacity, setBackgroundOpacity } =
+    useBackground();
   const { t, language, setLanguage } = useI18n();
   const bgRef = useRef<HTMLInputElement>(null);
 
@@ -80,9 +91,14 @@ export default function Customization() {
     <PageShell>
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-mono font-bold text-primary neon-text">{t("customization")}</h1>
+          <h1 className="text-xl font-mono font-bold text-primary neon-text">
+            {t("customization")}
+          </h1>
           <button
-            onClick={() => { resetSettings(); toast.success(t("resetSettings")); }}
+            onClick={() => {
+              resetSettings();
+              toast.success(t("resetSettings"));
+            }}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary border border-border text-xs font-mono rounded hover:border-destructive/30 transition-all text-muted-foreground hover:text-destructive"
           >
             <RotateCcw className="w-3 h-3" />
@@ -116,7 +132,10 @@ export default function Customization() {
             {themePresets.map((preset) => (
               <button
                 key={preset.hue}
-                onClick={() => { updateSettings({ themeHue: preset.hue }); toast.success(`${t(preset.nameKey)} ${t("themeApplied")}`); }}
+                onClick={() => {
+                  updateSettings({ themeHue: preset.hue });
+                  toast.success(`${t(preset.nameKey)} ${t("themeApplied")}`);
+                }}
                 className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-all ${
                   settings.themeHue === preset.hue
                     ? "border-foreground bg-secondary"
@@ -127,12 +146,16 @@ export default function Customization() {
                   className="w-8 h-8 rounded-full shadow-lg"
                   style={{ backgroundColor: `hsl(${preset.hue}, 100%, 50%)` }}
                 />
-                <span className="text-[10px] font-mono text-muted-foreground">{t(preset.nameKey)}</span>
+                <span className="text-[10px] font-mono text-muted-foreground">
+                  {t(preset.nameKey)}
+                </span>
               </button>
             ))}
           </div>
           <div className="space-y-1 pt-2">
-            <label className="text-[10px] font-mono text-muted-foreground">{t("customHue").toUpperCase()}: {settings.themeHue}°</label>
+            <label className="text-[10px] font-mono text-muted-foreground">
+              {t("customHue").toUpperCase()}: {settings.themeHue}°
+            </label>
             <input
               type="range"
               min="0"
@@ -151,7 +174,9 @@ export default function Customization() {
         <Section icon={Type} title={t("font")}>
           <div className="space-y-3">
             <div>
-              <label className="text-[10px] font-mono text-muted-foreground mb-2 block">{t("fontFamily").toUpperCase()}</label>
+              <label className="text-[10px] font-mono text-muted-foreground mb-2 block">
+                {t("fontFamily").toUpperCase()}
+              </label>
               <div className="grid grid-cols-3 gap-2">
                 {fontOptions.map((f) => (
                   <button
@@ -169,7 +194,9 @@ export default function Customization() {
               </div>
             </div>
             <div>
-              <label className="text-[10px] font-mono text-muted-foreground mb-2 block">{t("fontSize").toUpperCase()}</label>
+              <label className="text-[10px] font-mono text-muted-foreground mb-2 block">
+                {t("fontSize").toUpperCase()}
+              </label>
               <div className="grid grid-cols-3 gap-2">
                 {fontSizeOptions.map((s) => (
                   <button
@@ -200,7 +227,9 @@ export default function Customization() {
                   settings.neonEnabled ? "bg-primary" : "bg-secondary border border-border"
                 }`}
               >
-                <div className={`w-4 h-4 rounded-full bg-foreground absolute top-0.5 transition-all ${settings.neonEnabled ? "left-5" : "left-0.5"}`} />
+                <div
+                  className={`w-4 h-4 rounded-full bg-foreground absolute top-0.5 transition-all ${settings.neonEnabled ? "left-5" : "left-0.5"}`}
+                />
               </button>
             </label>
             <label className="flex items-center justify-between cursor-pointer">
@@ -211,7 +240,9 @@ export default function Customization() {
                   settings.animationsEnabled ? "bg-primary" : "bg-secondary border border-border"
                 }`}
               >
-                <div className={`w-4 h-4 rounded-full bg-foreground absolute top-0.5 transition-all ${settings.animationsEnabled ? "left-5" : "left-0.5"}`} />
+                <div
+                  className={`w-4 h-4 rounded-full bg-foreground absolute top-0.5 transition-all ${settings.animationsEnabled ? "left-5" : "left-0.5"}`}
+                />
               </button>
             </label>
           </div>
@@ -221,7 +252,9 @@ export default function Customization() {
         <Section icon={PanelLeft} title={t("sidebarLayout")}>
           <div className="space-y-3">
             <div>
-              <label className="text-[10px] font-mono text-muted-foreground mb-2 block">{t("position").toUpperCase()}</label>
+              <label className="text-[10px] font-mono text-muted-foreground mb-2 block">
+                {t("position").toUpperCase()}
+              </label>
               <div className="grid grid-cols-2 gap-2">
                 {(["left", "right"] as const).map((pos) => (
                   <button
@@ -246,7 +279,9 @@ export default function Customization() {
                   settings.sidebarCollapsed ? "bg-primary" : "bg-secondary border border-border"
                 }`}
               >
-                <div className={`w-4 h-4 rounded-full bg-foreground absolute top-0.5 transition-all ${settings.sidebarCollapsed ? "left-5" : "left-0.5"}`} />
+                <div
+                  className={`w-4 h-4 rounded-full bg-foreground absolute top-0.5 transition-all ${settings.sidebarCollapsed ? "left-5" : "left-0.5"}`}
+                />
               </button>
             </label>
           </div>
@@ -256,7 +291,12 @@ export default function Customization() {
         <Section icon={Wallpaper} title={t("backgroundImage")}>
           {backgroundUrl && (
             <div className="relative rounded-lg overflow-hidden h-24 border border-border">
-              <img src={backgroundUrl} alt={t("backgroundImage")} className="w-full h-full object-cover" style={{ opacity: backgroundOpacity }} />
+              <img
+                src={backgroundUrl}
+                alt={t("backgroundImage")}
+                className="w-full h-full object-cover"
+                style={{ opacity: backgroundOpacity }}
+              />
               <div className="absolute inset-0 bg-background/60" />
             </div>
           )}
@@ -270,18 +310,29 @@ export default function Customization() {
             </button>
             {backgroundUrl && (
               <button
-                onClick={() => { setBackgroundUrl(null); toast.success(t("bgRemoved")); }}
+                onClick={() => {
+                  setBackgroundUrl(null);
+                  toast.success(t("bgRemoved"));
+                }}
                 className="flex items-center gap-1.5 px-3 py-2 bg-secondary border border-border text-xs font-mono rounded hover:border-destructive/30 transition-all text-destructive"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 {t("removeImage")}
               </button>
             )}
-            <input ref={bgRef} type="file" accept="image/*,.gif" className="hidden" onChange={handleBgUpload} />
+            <input
+              ref={bgRef}
+              type="file"
+              accept="image/*,.gif"
+              className="hidden"
+              onChange={handleBgUpload}
+            />
           </div>
           {backgroundUrl && (
             <div className="space-y-1">
-              <label className="text-[10px] font-mono text-muted-foreground">{t("opacity").toUpperCase()}: {Math.round(backgroundOpacity * 100)}%</label>
+              <label className="text-[10px] font-mono text-muted-foreground">
+                {t("opacity").toUpperCase()}: {Math.round(backgroundOpacity * 100)}%
+              </label>
               <input
                 type="range"
                 min="0.05"

@@ -13,6 +13,7 @@ npx supabase functions deploy create-payment-address --no-verify-jwt
 ```
 
 **Önemli — Tor için:**
+
 - Tüm dış API çağrılarını `torsocks` veya SOCKS5 proxy üzerinden yap
 - `BlockCypher`, `Blockchain.info` gibi tracker'lar IP loglar → Tor zorunlu
 - Deno fetch için `Deno.env.get("HTTP_PROXY")` ile `socks5://127.0.0.1:9050` set et
@@ -29,6 +30,7 @@ export const torFetch = (url: string, init?: RequestInit) =>
 Self-host'ta `LOVABLE_API_KEY` çalışmaz. Alternatif:
 
 ### Seçenek A — OpenRouter (önerilir, anonim ödeme)
+
 ```ts
 const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
   method: "POST",
@@ -42,13 +44,16 @@ const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
   }),
 });
 ```
+
 **Tor üzerinden:** OpenRouter'a torsocks ile çağrı yap (yukarıdaki `torFetch`).
 
 ### Seçenek B — Yerel Ollama (tamamen offline)
+
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
 ollama pull llama3.1:8b
 ```
+
 Edge function'ı `http://127.0.0.1:11434/api/chat`'e yönlendir. **Hiçbir dış API çağrısı yok** = en güvenli.
 
 ## 3. Secret'ları taşıma
@@ -64,7 +69,9 @@ npx supabase secrets set BLOCKCYPHER_TOKEN=...
 ## 4. URL güncelleme (uygulama tarafı)
 
 `/opt/aeigsth/app/.env`:
+
 ```
 VITE_SUPABASE_URL=http://127.0.0.1:8000
 ```
+
 Edge function URL'leri otomatik `http://127.0.0.1:8000/functions/v1/<name>` olur — kod değişikliği gerekmez.

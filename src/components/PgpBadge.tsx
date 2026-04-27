@@ -27,7 +27,9 @@ export default function PgpBadge({ userId, size = "sm", showFingerprint = false 
         .maybeSingle();
       if (!cancelled) setKey((data as KeyRow | null) ?? null);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
   if (!key) return null;
@@ -38,7 +40,11 @@ export default function PgpBadge({ userId, size = "sm", showFingerprint = false 
       title={`PGP Verified — ${formatFingerprint(key.fingerprint)}`}
       className={`inline-flex items-center gap-1 font-mono rounded ${isMd ? "px-2 py-1 text-[11px]" : "px-1.5 py-0.5 text-[10px]"} ${key.verified ? "bg-green-500/10 text-green-400 border border-green-500/30" : "bg-primary/10 text-primary border border-primary/30"}`}
     >
-      {key.verified ? <ShieldCheck className={isMd ? "w-3.5 h-3.5" : "w-3 h-3"} /> : <Key className={isMd ? "w-3.5 h-3.5" : "w-3 h-3"} />}
+      {key.verified ? (
+        <ShieldCheck className={isMd ? "w-3.5 h-3.5" : "w-3 h-3"} />
+      ) : (
+        <Key className={isMd ? "w-3.5 h-3.5" : "w-3 h-3"} />
+      )}
       PGP {key.verified ? "VERIFIED" : "READY"}
       {showFingerprint && <span className="opacity-70">· {key.fingerprint.slice(-8)}</span>}
     </span>

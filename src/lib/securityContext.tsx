@@ -57,7 +57,9 @@ async function computeFingerprint(): Promise<string> {
   ].join("|");
   const buf = new TextEncoder().encode(parts);
   const hash = await crypto.subtle.digest("SHA-256", buf);
-  return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 /** Tor Browser heuristic. Kesin değil ama iyi bir tahmin. */
@@ -92,7 +94,9 @@ function installAntiFingerprint() {
           ctx.fillStyle = `rgba(${noise},${noise},${noise},0.01)`;
           ctx.fillRect(0, 0, 1, 1);
         }
-      } catch {}
+      } catch {
+        void 0;
+      }
       return origToDataURL.apply(this, args);
     };
 
@@ -105,7 +109,9 @@ function installAntiFingerprint() {
       }
       return data;
     };
-  } catch {}
+  } catch {
+    void 0;
+  }
 
   try {
     const wgl = WebGLRenderingContext.prototype.getParameter;
@@ -115,7 +121,9 @@ function installAntiFingerprint() {
       if (param === 0x1f01 || param === 0x9246) return "Generic Renderer";
       return wgl.call(this, param);
     };
-  } catch {}
+  } catch {
+    void 0;
+  }
 
   try {
     const ac = (window as any).AudioBuffer?.prototype;
@@ -130,7 +138,9 @@ function installAntiFingerprint() {
         return data;
       };
     }
-  } catch {}
+  } catch {
+    void 0;
+  }
 }
 
 /* ------------------------- provider ------------------------- */
@@ -194,10 +204,14 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
           // Otomatik logout
           try {
             await supabase.auth.signOut();
-          } catch {}
+          } catch {
+            void 0;
+          }
           localStorage.setItem(FP_KEY, fp);
         }
-      } catch {}
+      } catch {
+        void 0;
+      }
     })();
 
     const onActivity = () => {
@@ -213,7 +227,9 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
         try {
           sessionStorage.clear();
           await supabase.auth.signOut();
-        } catch {}
+        } catch {
+          void 0;
+        }
         lastActivity.current = Date.now();
       }
     }, 30_000);
@@ -306,7 +322,9 @@ export function SecurityProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{ threatLevel, events, blocked, isTor, fingerprintMismatch, unblock, guard }}>
+    <Ctx.Provider
+      value={{ threatLevel, events, blocked, isTor, fingerprintMismatch, unblock, guard }}
+    >
       {children}
     </Ctx.Provider>
   );

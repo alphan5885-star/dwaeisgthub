@@ -49,10 +49,13 @@ Deno.serve(async (req) => {
       });
     }
     if (response.status === 402) {
-      return new Response(JSON.stringify({ error: "AI kredisi tükendi. Workspace'e kredi ekleyin." }), {
-        status: 402,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "AI kredisi tükendi. Workspace'e kredi ekleyin." }),
+        {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
     if (!response.ok) {
       const t = await response.text();

@@ -1,4 +1,10 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { MapPin } from "lucide-react";
 
 interface Product {
@@ -38,7 +44,9 @@ export default function ProductDescriptionModal({
           {(product.origin || product.destination) && (
             <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
               <MapPin className="w-3 h-3 text-primary" />
-              <span>{product.origin || "?"} → {product.destination || "?"}</span>
+              <span>
+                {product.origin || "?"} → {product.destination || "?"}
+              </span>
             </div>
           )}
           <div className="text-foreground/90 whitespace-pre-wrap leading-relaxed">

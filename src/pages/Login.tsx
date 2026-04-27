@@ -1,7 +1,16 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/authContext";
 import { useSessionTimer } from "@/lib/sessionTimerContext";
-import { Shield, AlertTriangle, Loader2, Eye, EyeOff, Fingerprint, Lock, Clock } from "lucide-react";
+import {
+  Shield,
+  AlertTriangle,
+  Loader2,
+  Eye,
+  EyeOff,
+  Fingerprint,
+  Lock,
+  Clock,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import MathCaptcha from "@/components/MathCaptcha";
 
@@ -50,7 +59,10 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setSuccess("");
-    if (!captchaOk) { setError("Önce bot doğrulamasını tamamla."); return; }
+    if (!captchaOk) {
+      setError("Önce bot doğrulamasını tamamla.");
+      return;
+    }
     setSubmitting(true);
 
     if (mode === "login") {
@@ -76,7 +88,14 @@ export default function Login() {
         setSubmitting(false);
         return;
       }
-      const err = await signup(email, password, displayName || email, role, withdrawPin || undefined, pgpKey || undefined);
+      const err = await signup(
+        email,
+        password,
+        displayName || email,
+        role,
+        withdrawPin || undefined,
+        pgpKey || undefined,
+      );
       if (err) {
         setError(err);
         setSubmitting(false);
@@ -109,15 +128,23 @@ export default function Login() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,0,51,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,0,51,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
-        <motion.div initial={{ opacity: 0, y: 30, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="w-full max-w-md relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          className="w-full max-w-md relative z-10"
+        >
           <div className="text-center mb-8">
             <Lock className="w-14 h-14 text-primary mx-auto mb-3 animate-pulse" />
             <h1 className="text-2xl font-mono font-bold text-primary neon-text">2FA Doğrulama</h1>
-            <p className="text-xs text-muted-foreground mt-1 font-mono">Google Authenticator kodunuzu girin</p>
+            <p className="text-xs text-muted-foreground mt-1 font-mono">
+              Google Authenticator kodunuzu girin
+            </p>
           </div>
           <div className="glass-card rounded-lg p-6 space-y-4 neon-border">
             <div>
-              <label className="text-xs text-muted-foreground font-mono mb-2 block">DOĞRULAMA KODU</label>
+              <label className="text-xs text-muted-foreground font-mono mb-2 block">
+                DOĞRULAMA KODU
+              </label>
               <input
                 value={mfaCode}
                 onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
@@ -130,13 +157,26 @@ export default function Login() {
             </div>
             <AnimatePresence>
               {error && (
-                <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex items-center gap-2 text-destructive text-xs font-mono bg-destructive/10 rounded px-3 py-2">
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-center gap-2 text-destructive text-xs font-mono bg-destructive/10 rounded px-3 py-2"
+                >
                   <AlertTriangle className="w-3 h-3 flex-shrink-0" /> {error}
                 </motion.div>
               )}
             </AnimatePresence>
-            <button onClick={handleMfaVerify} disabled={mfaCode.length !== 6 || submitting} className="w-full bg-primary text-primary-foreground py-3 rounded font-mono text-sm font-bold neon-glow-btn disabled:opacity-50 flex items-center justify-center gap-2">
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+            <button
+              onClick={handleMfaVerify}
+              disabled={mfaCode.length !== 6 || submitting}
+              className="w-full bg-primary text-primary-foreground py-3 rounded font-mono text-sm font-bold neon-glow-btn disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {submitting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Shield className="w-4 h-4" />
+              )}
               DOĞRULA
             </button>
           </div>
@@ -160,17 +200,34 @@ export default function Login() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,0,51,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,0,51,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 30, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.5, ease: "easeOut" }} className="w-full max-w-md relative z-10">
+      <motion.div
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="w-full max-w-md relative z-10"
+      >
         <div className="text-center mb-8">
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.2 }}>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+          >
             <Shield className="w-14 h-14 text-primary mx-auto mb-3 animate-pulse" />
           </motion.div>
-          <h1 className="text-3xl font-mono font-bold text-primary neon-text tracking-wider">aeigsthub</h1>
-          <p className="text-xs text-muted-foreground mt-1 font-mono">​anonim 1ll3g4l marketplace :)</p>
+          <h1 className="text-3xl font-mono font-bold text-primary neon-text tracking-wider">
+            aeigsthub
+          </h1>
+          <p className="text-xs text-muted-foreground mt-1 font-mono">
+            anonim 1ll3g4l marketplace :)
+          </p>
         </div>
 
         {antiPhishingCode && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mb-3 bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2 flex items-center gap-2">
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="mb-3 bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2 flex items-center gap-2"
+          >
             <Fingerprint className="w-4 h-4 text-green-500" />
             <div>
               <div className="text-[10px] text-green-500 font-mono">Anti-Phishing Doğrulama:</div>
@@ -181,7 +238,16 @@ export default function Login() {
 
         <div className="flex gap-1 p-1 bg-secondary rounded-lg mb-4 relative">
           {(["login", "signup"] as Mode[]).map((m) => (
-            <button key={m} type="button" onClick={() => { setMode(m); setError(""); setSuccess(""); }} className={`flex-1 py-2 text-xs font-mono rounded-md transition-all relative z-10 ${mode === m ? "bg-primary text-primary-foreground neon-glow-btn font-bold" : "text-muted-foreground hover:text-foreground"}`}>
+            <button
+              key={m}
+              type="button"
+              onClick={() => {
+                setMode(m);
+                setError("");
+                setSuccess("");
+              }}
+              className={`flex-1 py-2 text-xs font-mono rounded-md transition-all relative z-10 ${mode === m ? "bg-primary text-primary-foreground neon-glow-btn font-bold" : "text-muted-foreground hover:text-foreground"}`}
+            >
               {m === "login" ? "GİRİŞ" : "KAYIT OL"}
             </button>
           ))}
@@ -191,7 +257,9 @@ export default function Login() {
         <div className="mb-4 glass-card rounded-lg p-3 neon-border/50">
           <div className="flex items-center gap-2 mb-2">
             <Clock className="w-3.5 h-3.5 text-primary" />
-            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Oturum Süresi</span>
+            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
+              Oturum Süresi
+            </span>
           </div>
           <div className="flex gap-1">
             {SESSION_OPTIONS.map((opt) => (
@@ -200,7 +268,9 @@ export default function Login() {
                 type="button"
                 onClick={() => setSessionMin(opt.min)}
                 className={`flex-1 py-1.5 text-[11px] font-mono rounded transition-all ${
-                  sessionMin === opt.min ? "bg-primary text-primary-foreground font-bold" : "bg-secondary text-muted-foreground hover:text-foreground"
+                  sessionMin === opt.min
+                    ? "bg-primary text-primary-foreground font-bold"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {opt.label}
@@ -212,14 +282,33 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="glass-card rounded-lg p-6 space-y-4 neon-border">
           <AnimatePresence mode="wait">
             {mode === "signup" && (
-              <motion.div key="signup-fields" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="space-y-4 overflow-hidden">
+              <motion.div
+                key="signup-fields"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-4 overflow-hidden"
+              >
                 <div>
-                  <label className="text-xs text-muted-foreground font-mono mb-1 block">GÖRÜNTÜLEME ADI</label>
-                  <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="w-full bg-secondary border border-border rounded px-3 py-2.5 text-sm text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="Kullanıcı adınız" />
+                  <label className="text-xs text-muted-foreground font-mono mb-1 block">
+                    GÖRÜNTÜLEME ADI
+                  </label>
+                  <input
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="w-full bg-secondary border border-border rounded px-3 py-2.5 text-sm text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    placeholder="Kullanıcı adınız"
+                  />
                 </div>
                 <div className="flex gap-1 p-1 bg-secondary rounded-lg">
                   {(["buyer", "vendor"] as Role[]).map((r) => (
-                    <button key={r} type="button" onClick={() => setRole(r)} className={`flex-1 py-2 text-xs font-mono rounded-md transition-all ${role === r ? "bg-primary text-primary-foreground neon-glow-btn font-bold" : "text-muted-foreground hover:text-foreground"}`}>
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setRole(r)}
+                      className={`flex-1 py-2 text-xs font-mono rounded-md transition-all ${role === r ? "bg-primary text-primary-foreground neon-glow-btn font-bold" : "text-muted-foreground hover:text-foreground"}`}
+                    >
                       {r === "buyer" ? "🛒 ALICI" : "🏪 SATICI"}
                     </button>
                   ))}
@@ -230,14 +319,34 @@ export default function Login() {
 
           <div>
             <label className="text-xs text-muted-foreground font-mono mb-1 block">E-POSTA</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-secondary border border-border rounded px-3 py-2.5 text-sm text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="ornek@email.com" required autoComplete="email" />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-secondary border border-border rounded px-3 py-2.5 text-sm text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/50"
+              placeholder="ornek@email.com"
+              required
+              autoComplete="email"
+            />
           </div>
 
           <div>
             <label className="text-xs text-muted-foreground font-mono mb-1 block">ŞİFRE</label>
             <div className="relative">
-              <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-secondary border border-border rounded px-3 py-2.5 pr-10 text-sm text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/50" required minLength={6} autoComplete={mode === "login" ? "current-password" : "new-password"} />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-secondary border border-border rounded px-3 py-2.5 pr-10 text-sm text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/50"
+                required
+                minLength={6}
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
@@ -245,9 +354,18 @@ export default function Login() {
 
           <AnimatePresence mode="wait">
             {mode === "signup" && (
-              <motion.div key="security-fields" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="space-y-4 overflow-hidden">
+              <motion.div
+                key="security-fields"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-4 overflow-hidden"
+              >
                 <div>
-                  <label className="text-xs text-muted-foreground font-mono mb-1 block">PARA ÇEKME PIN'İ (6 hane)</label>
+                  <label className="text-xs text-muted-foreground font-mono mb-1 block">
+                    PARA ÇEKME PIN'İ (6 hane)
+                  </label>
                   <input
                     inputMode="numeric"
                     value={withdrawPin}
@@ -256,10 +374,14 @@ export default function Login() {
                     className="w-full bg-secondary border border-border rounded px-3 py-2.5 text-sm text-foreground font-mono tracking-[0.5em] text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
                     maxLength={6}
                   />
-                  <p className="text-[9px] font-mono text-muted-foreground mt-1">Çıkış işlemlerinde sorulur. Hash'lenerek saklanır.</p>
+                  <p className="text-[9px] font-mono text-muted-foreground mt-1">
+                    Çıkış işlemlerinde sorulur. Hash'lenerek saklanır.
+                  </p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground font-mono mb-1 block">PGP PUBLIC KEY (opsiyonel)</label>
+                  <label className="text-xs text-muted-foreground font-mono mb-1 block">
+                    PGP PUBLIC KEY (opsiyonel)
+                  </label>
                   <textarea
                     value={pgpKey}
                     onChange={(e) => setPgpKey(e.target.value)}
@@ -276,19 +398,42 @@ export default function Login() {
 
           <AnimatePresence>
             {error && (
-              <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex items-center gap-2 text-destructive text-xs font-mono bg-destructive/10 rounded px-3 py-2">
+              <motion.div
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center gap-2 text-destructive text-xs font-mono bg-destructive/10 rounded px-3 py-2"
+              >
                 <AlertTriangle className="w-3 h-3 flex-shrink-0" /> {error}
               </motion.div>
             )}
             {success && (
-              <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex items-center gap-2 text-green-500 text-xs font-mono bg-green-500/10 rounded px-3 py-2">
+              <motion.div
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center gap-2 text-green-500 text-xs font-mono bg-green-500/10 rounded px-3 py-2"
+              >
                 ✓ {success}
               </motion.div>
             )}
           </AnimatePresence>
 
-          <motion.button type="submit" disabled={submitting || !captchaOk} whileTap={{ scale: 0.98 }} className="w-full bg-primary text-primary-foreground py-3 rounded font-mono text-sm font-bold hover:opacity-90 transition-all neon-glow-btn disabled:opacity-50 flex items-center justify-center gap-2">
-            {submitting ? (<><Loader2 className="w-4 h-4 animate-spin" /> İŞLENİYOR...</>) : mode === "login" ? "GİRİŞ YAP" : "KAYIT OL"}
+          <motion.button
+            type="submit"
+            disabled={submitting || !captchaOk}
+            whileTap={{ scale: 0.98 }}
+            className="w-full bg-primary text-primary-foreground py-3 rounded font-mono text-sm font-bold hover:opacity-90 transition-all neon-glow-btn disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> İŞLENİYOR...
+              </>
+            ) : mode === "login" ? (
+              "GİRİŞ YAP"
+            ) : (
+              "KAYIT OL"
+            )}
           </motion.button>
         </form>
 

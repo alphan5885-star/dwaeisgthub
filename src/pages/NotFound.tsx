@@ -30,11 +30,10 @@ const NotFound = () => {
             <h1 className="text-5xl font-mono font-bold text-primary neon-text">404</h1>
           </div>
 
-          <p className="text-muted-foreground font-mono text-sm mb-2">
-            Sayfa bulunamadi.
-          </p>
+          <p className="text-muted-foreground font-mono text-sm mb-2">Sayfa bulunamadi.</p>
           <p className="text-muted-foreground/60 font-mono text-xs mb-6">
-            Aranan yol: <code className="bg-secondary px-1.5 py-0.5 rounded">{location.pathname}</code>
+            Aranan yol:{" "}
+            <code className="bg-secondary px-1.5 py-0.5 rounded">{location.pathname}</code>
           </p>
 
           <a

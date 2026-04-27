@@ -17,11 +17,13 @@ const BackgroundContext = createContext<BackgroundContextType>({
 export const useBackground = () => useContext(BackgroundContext);
 
 export function BackgroundProvider({ children }: { children: ReactNode }) {
-  const [backgroundUrl, setBackgroundUrlState] = useState<string | null>(
-    () => (typeof window === "undefined" ? null : window.localStorage.getItem("app_bg_url"))
+  const [backgroundUrl, setBackgroundUrlState] = useState<string | null>(() =>
+    typeof window === "undefined" ? null : window.localStorage.getItem("app_bg_url"),
   );
-  const [backgroundOpacity, setBackgroundOpacityState] = useState<number>(
-    () => (typeof window === "undefined" ? 0.15 : parseFloat(window.localStorage.getItem("app_bg_opacity") || "0.15"))
+  const [backgroundOpacity, setBackgroundOpacityState] = useState<number>(() =>
+    typeof window === "undefined"
+      ? 0.15
+      : parseFloat(window.localStorage.getItem("app_bg_opacity") || "0.15"),
   );
 
   const setBackgroundUrl = (url: string | null) => {
@@ -36,7 +38,9 @@ export function BackgroundProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <BackgroundContext.Provider value={{ backgroundUrl, setBackgroundUrl, backgroundOpacity, setBackgroundOpacity }}>
+    <BackgroundContext.Provider
+      value={{ backgroundUrl, setBackgroundUrl, backgroundOpacity, setBackgroundOpacity }}
+    >
       {children}
     </BackgroundContext.Provider>
   );

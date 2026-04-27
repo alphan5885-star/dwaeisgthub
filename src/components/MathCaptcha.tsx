@@ -43,7 +43,9 @@ export default function MathCaptcha({ onValidChange, label = "Puzzle doğrulama"
     const decoyCount = 2;
     const ds: { x: number; y: number }[] = [];
     for (let i = 0; i < decoyCount; i++) {
-      let dx: number, dy: number, tries = 0;
+      let dx: number,
+        dy: number,
+        tries = 0;
       do {
         dx = Math.floor(20 + Math.random() * (maxX - 40));
         dy = Math.floor(8 + Math.random() * (maxY - 16));
@@ -61,7 +63,7 @@ export default function MathCaptcha({ onValidChange, label = "Puzzle doğrulama"
 
   useEffect(() => {
     regen();
-  }, []);
+  }, [regen]);
 
   // Countdown timer
   useEffect(() => {
@@ -114,7 +116,7 @@ export default function MathCaptcha({ onValidChange, label = "Puzzle doğrulama"
       setPos({ x, y });
       pathRef.current.push({ x, y, t: Date.now() - startTimeRef.current });
     },
-    [dragging, maxX, maxY]
+    [dragging, maxX, maxY],
   );
 
   const endDrag = useCallback(() => {
@@ -206,7 +208,12 @@ export default function MathCaptcha({ onValidChange, label = "Puzzle doğrulama"
           <div
             ref={trackRef}
             className={`relative rounded border border-border overflow-hidden bg-secondary/30 ${shake ? "animate-pulse" : ""}`}
-            style={{ width: TRACK_WIDTH, height: TRACK_HEIGHT, maxWidth: "100%", touchAction: "none" }}
+            style={{
+              width: TRACK_WIDTH,
+              height: TRACK_HEIGHT,
+              maxWidth: "100%",
+              touchAction: "none",
+            }}
           >
             {dots.map((d, i) => (
               <span
@@ -252,7 +259,13 @@ export default function MathCaptcha({ onValidChange, label = "Puzzle doğrulama"
               className={`absolute rounded shadow-lg cursor-grab active:cursor-grabbing select-none flex items-center justify-center font-mono text-xs ${
                 dragging ? "scale-110 z-10" : ""
               } bg-primary text-primary-foreground border-2 border-primary-foreground/30 transition-transform`}
-              style={{ left: pos.x, top: pos.y, width: PIECE_SIZE, height: PIECE_SIZE, touchAction: "none" }}
+              style={{
+                left: pos.x,
+                top: pos.y,
+                width: PIECE_SIZE,
+                height: PIECE_SIZE,
+                touchAction: "none",
+              }}
             >
               ✦
             </div>

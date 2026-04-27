@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import PageShell from "@/components/PageShell";
 import { useAuth } from "@/lib/authContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +20,13 @@ import {
   Eye,
   Trash2,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
@@ -65,6 +71,7 @@ const forumStorage = {
 
 export default function Forum() {
   const { user, role } = useAuth();
+  const isMounted = useRef(true);
   const [threads, setThreads] = useState<ForumThread[]>([]);
   const [selectedThread, setSelectedThread] = useState<ForumThread | null>(null);
   const [replies, setReplies] = useState<ForumReply[]>([]);
@@ -76,14 +83,51 @@ export default function Forum() {
   const [loading, setLoading] = useState(false);
   const [displayName, setDisplayName] = useState<string>("");
 
+  const loadThreads = useCallback(() => {
+    const sorted = [...forumStorage.threads].sort((a, b) => {
+      if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+    setThreads(sorted);
+  }, []);
+
+  const loadUserProfile = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!isMounted.current) return;
+
+      if (error) {
+        if (import.meta.env.DEV) console.error("Error loading forum profile:", error);
+        return;
+      }
+
+      if (data?.display_name) {
+        setDisplayName(data.display_name);
+      } else {
+        setDisplayName(user.email?.split("@")[0] || "Anonim");
+      }
+    } catch (e) {
+      if (import.meta.env.DEV) console.error("Catch error in loadUserProfile:", e);
+    }
+  }, [user]);
+
   useEffect(() => {
+    isMounted.current = true;
     // Initialize with demo data if empty
     if (!forumStorage.initialized) {
+      // ... (existing initialization code)
       forumStorage.threads = [
         {
           id: "1",
           title: "Platforma Hos Geldiniz",
-          content: "Bu platform hakkinda sorularinizi buradan sorabilirsiniz. Kurallara uymayi unutmayin.",
+          content:
+            "Bu platform hakkinda sorularinizi buradan sorabilirsiniz. Kurallara uymayi unutmayin.",
           author_id: "system",
           author_name: "Admin",
           category: "duyurular",
@@ -97,7 +141,8 @@ export default function Forum() {
         {
           id: "2",
           title: "Guvenlik Onerilerimiz",
-          content: "Islemlerinizde dikkat etmeniz gereken guvenlik onlemleri:\n\n1. Sifrenizi kimseyle paylasmayiniz\n2. 2FA etkinlestirin\n3. Supheli mesajlara dikkat edin",
+          content:
+            "Islemlerinizde dikkat etmeniz gereken guvenlik onlemleri:\n\n1. Sifrenizi kimseyle paylasmayiniz\n2. 2FA etkinlestirin\n3. Supheli mesajlara dikkat edin",
           author_id: "system",
           author_name: "Admin",
           category: "duyurular",
@@ -111,7 +156,8 @@ export default function Forum() {
         {
           id: "3",
           title: "Odeme islemi ne kadar suruyor?",
-          content: "Merhaba, LTC ile odeme yaptim ama henuz onaylanmadi. Ne kadar beklemem gerekiyor?",
+          content:
+            "Merhaba, LTC ile odeme yaptim ama henuz onaylanmadi. Ne kadar beklemem gerekiyor?",
           author_id: "user1",
           author_name: "Kullanici42",
           category: "yardim",
@@ -143,7 +189,8 @@ export default function Forum() {
         {
           id: "r3",
           thread_id: "3",
-          content: "LTC islemleri genelde 10-30 dakika icinde onaylanir. Ag yogunluguna gore degisebilir.",
+          content:
+            "LTC islemleri genelde 10-30 dakika icinde onaylanir. Ag yogunluguna gore degisebilir.",
           author_id: "user4",
           author_name: "VendorX",
           created_at: new Date(Date.now() - 86400000).toISOString(),
@@ -151,32 +198,18 @@ export default function Forum() {
       ];
       forumStorage.initialized = true;
     }
-    loadThreads();
-    loadUserProfile();
-  }, [user]);
 
-  const loadUserProfile = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("user_id", user.id)
-      .single();
-    if (data?.display_name) {
-      setDisplayName(data.display_name);
-    } else {
-      setDisplayName(user.email?.split("@")[0] || "Anonim");
-    }
-  };
+    const load = async () => {
+      if (!isMounted.current) return;
+      loadThreads();
+      await loadUserProfile();
+    };
 
-  const loadThreads = () => {
-    // Sort: pinned first, then by created_at
-    const sorted = [...forumStorage.threads].sort((a, b) => {
-      if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    });
-    setThreads(sorted);
-  };
+    load();
+    return () => {
+      isMounted.current = false;
+    };
+  }, [loadThreads, loadUserProfile]);
 
   const loadReplies = (threadId: string) => {
     const threadReplies = forumStorage.replies
@@ -289,7 +322,9 @@ export default function Forum() {
               <div className="flex items-center gap-2 mb-2">
                 {selectedThread.is_pinned && <Pin className="w-4 h-4 text-yellow-400" />}
                 {selectedThread.is_locked && <Lock className="w-4 h-4 text-red-400" />}
-                <span className={`text-xs font-mono ${getCategoryInfo(selectedThread.category).color}`}>
+                <span
+                  className={`text-xs font-mono ${getCategoryInfo(selectedThread.category).color}`}
+                >
                   [{getCategoryInfo(selectedThread.category).label.toUpperCase()}]
                 </span>
               </div>
@@ -320,7 +355,9 @@ export default function Forum() {
             </span>
           </div>
 
-          <div className="text-sm text-foreground/90 whitespace-pre-wrap">{selectedThread.content}</div>
+          <div className="text-sm text-foreground/90 whitespace-pre-wrap">
+            {selectedThread.content}
+          </div>
         </motion.div>
 
         {/* Replies */}
@@ -345,7 +382,9 @@ export default function Forum() {
                   </div>
                   <span>{reply.author_name}</span>
                   <span className="opacity-50">|</span>
-                  <span>{format(new Date(reply.created_at), "dd MMM yyyy HH:mm", { locale: tr })}</span>
+                  <span>
+                    {format(new Date(reply.created_at), "dd MMM yyyy HH:mm", { locale: tr })}
+                  </span>
                 </div>
                 <div className="text-sm text-foreground/90 pl-9">{reply.content}</div>
               </motion.div>
@@ -355,7 +394,9 @@ export default function Forum() {
           {replies.length === 0 && (
             <div className="glass-card rounded-lg p-8 text-center">
               <MessageSquare className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-40" />
-              <p className="text-sm text-muted-foreground">Henuz yanit yok. Ilk yaniti siz yazin!</p>
+              <p className="text-sm text-muted-foreground">
+                Henuz yanit yok. Ilk yaniti siz yazin!
+              </p>
             </div>
           )}
         </div>
@@ -382,7 +423,9 @@ export default function Forum() {
         ) : (
           <div className="glass-card rounded-lg p-4 text-center">
             <Lock className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground font-mono">Bu konu kilitlenmistir. Yanit yazilamaz.</p>
+            <p className="text-sm text-muted-foreground font-mono">
+              Bu konu kilitlenmistir. Yanit yazilamaz.
+            </p>
           </div>
         )}
       </PageShell>
@@ -410,7 +453,9 @@ export default function Forum() {
             </DialogHeader>
             <div className="space-y-4 mt-4">
               <div>
-                <label className="text-xs font-mono text-muted-foreground mb-1 block">Kategori</label>
+                <label className="text-xs font-mono text-muted-foreground mb-1 block">
+                  Kategori
+                </label>
                 <select
                   value={newThread.category}
                   onChange={(e) => setNewThread({ ...newThread, category: e.target.value })}
@@ -469,7 +514,9 @@ export default function Forum() {
           <button
             onClick={() => setCategoryFilter("all")}
             className={`px-3 py-1.5 text-[10px] font-mono rounded-md transition-all whitespace-nowrap ${
-              categoryFilter === "all" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              categoryFilter === "all"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             TUMU
@@ -479,7 +526,9 @@ export default function Forum() {
               key={cat.id}
               onClick={() => setCategoryFilter(cat.id)}
               className={`px-3 py-1.5 text-[10px] font-mono rounded-md transition-all whitespace-nowrap ${
-                categoryFilter === cat.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                categoryFilter === cat.id
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {cat.label.toUpperCase()}
@@ -513,14 +562,18 @@ export default function Forum() {
                   <div className="flex items-center gap-2 mb-1">
                     {thread.is_pinned && <Pin className="w-3 h-3 text-yellow-400" />}
                     {thread.is_locked && <Lock className="w-3 h-3 text-red-400" />}
-                    <span className={`text-[10px] font-mono ${getCategoryInfo(thread.category).color}`}>
+                    <span
+                      className={`text-[10px] font-mono ${getCategoryInfo(thread.category).color}`}
+                    >
                       [{getCategoryInfo(thread.category).label.toUpperCase()}]
                     </span>
                   </div>
                   <h3 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
                     {thread.title}
                   </h3>
-                  <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{thread.content}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                    {thread.content}
+                  </p>
                   <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground font-mono">
                     <span className="flex items-center gap-1">
                       <User className="w-3 h-3" />

@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Bell, Package, MessageSquare, AlertTriangle, X, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/authContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "@/lib/router-shim";
 
 interface Notification {
   id: string;
@@ -30,11 +31,35 @@ const typeColor = {
 
 export default function NotificationBell() {
   const { user, role } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const loadNotifications = useCallback(async () => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from("notifications")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(30);
+    if (data) {
+      setNotifications(
+        data.map((n: any) => ({
+          id: n.id,
+          type: n.type || "system",
+          title: n.title,
+          body: n.body,
+          read: n.read || false,
+          created_at: n.created_at,
+          link: n.link,
+        })),
+      );
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -45,24 +70,34 @@ export default function NotificationBell() {
       .channel("notifications")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
         (payload) => {
           const n = payload.new as any;
-          setNotifications((prev) => [{
-            id: n.id,
-            type: n.type || "system",
-            title: n.title,
-            body: n.body,
-            read: false,
-            created_at: n.created_at,
-            link: n.link,
-          }, ...prev]);
-        }
+          setNotifications((prev) => [
+            {
+              id: n.id,
+              type: n.type || "system",
+              title: n.title,
+              body: n.body,
+              read: false,
+              created_at: n.created_at,
+              link: n.link,
+            },
+            ...prev,
+          ]);
+        },
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
-  }, [user]);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, loadNotifications]);
 
   // Close on outside click
   useEffect(() => {
@@ -75,35 +110,18 @@ export default function NotificationBell() {
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const loadNotifications = async () => {
-    if (!user) return;
-    const { data } = await (supabase as any)
-      .from("notifications")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(30);
-    if (data) {
-      setNotifications(data.map((n: any) => ({
-        id: n.id,
-        type: n.type || "system",
-        title: n.title,
-        body: n.body,
-        read: n.read || false,
-        created_at: n.created_at,
-        link: n.link,
-      })));
-    }
-  };
-
   const markAsRead = async (id: string) => {
     await (supabase as any).from("notifications").update({ read: true }).eq("id", id);
-    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
   };
 
   const markAllRead = async () => {
     if (!user) return;
-    await (supabase as any).from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
+    await (supabase as any)
+      .from("notifications")
+      .update({ read: true })
+      .eq("user_id", user.id)
+      .eq("read", false);
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
@@ -143,7 +161,10 @@ export default function NotificationBell() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <span className="text-xs font-mono font-bold text-foreground">Bildirimler</span>
               {unreadCount > 0 && (
-                <button onClick={markAllRead} className="text-[10px] font-mono text-primary hover:underline flex items-center gap-1">
+                <button
+                  onClick={markAllRead}
+                  className="text-[10px] font-mono text-primary hover:underline flex items-center gap-1"
+                >
                   <Check className="w-3 h-3" /> Tümünü oku
                 </button>
               )}
@@ -164,7 +185,7 @@ export default function NotificationBell() {
                       key={n.id}
                       onClick={() => {
                         markAsRead(n.id);
-                        if (n.link) window.location.href = n.link;
+                        if (n.link) navigate(n.link);
                       }}
                       className={`flex items-start gap-3 px-4 py-3 border-b border-border/50 cursor-pointer hover:bg-secondary/50 transition-colors ${
                         !n.read ? "bg-primary/5" : ""
@@ -175,16 +196,22 @@ export default function NotificationBell() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <span className={`text-xs font-mono ${!n.read ? "text-foreground font-bold" : "text-muted-foreground"}`}>
+                          <span
+                            className={`text-xs font-mono ${!n.read ? "text-foreground font-bold" : "text-muted-foreground"}`}
+                          >
                             {n.title}
                           </span>
                           <span className="text-[9px] font-mono text-muted-foreground ml-2 shrink-0">
                             {timeAgo(n.created_at)}
                           </span>
                         </div>
-                        <p className="text-[10px] font-mono text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>
+                        <p className="text-[10px] font-mono text-muted-foreground mt-0.5 line-clamp-2">
+                          {n.body}
+                        </p>
                       </div>
-                      {!n.read && <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />}
+                      {!n.read && (
+                        <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
+                      )}
                     </div>
                   );
                 })

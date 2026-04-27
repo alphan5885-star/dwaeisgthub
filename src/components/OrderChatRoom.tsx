@@ -32,11 +32,22 @@ export default function OrderChatRoom({ roomId }: { roomId: string }) {
 
     const channel = supabase
       .channel(`room-${roomId}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_room_messages", filter: `room_id=eq.${roomId}` }, (payload) => {
-        setMessages((p) => [...p, payload.new as Msg]);
-      })
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "chat_room_messages",
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          setMessages((p) => [...p, payload.new as Msg]);
+        },
+      )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [roomId]);
 
   useEffect(() => {
@@ -62,13 +73,18 @@ export default function OrderChatRoom({ roomId }: { roomId: string }) {
     <div className="flex flex-col h-[400px] border border-destructive/40 rounded bg-card/40">
       <div className="px-3 py-2 border-b border-border bg-destructive/10 flex items-center gap-2">
         <ShieldAlert className="w-4 h-4 text-destructive" />
-        <span className="text-xs font-mono text-destructive">Operasyon DM • 24 saat sonra imha edilir</span>
+        <span className="text-xs font-mono text-destructive">
+          Operasyon DM • 24 saat sonra imha edilir
+        </span>
       </div>
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-2">
         {messages.map((m) => {
           if (m.is_system) {
             return (
-              <div key={m.id} className="text-[11px] font-mono text-destructive bg-destructive/10 border border-destructive/40 rounded px-2 py-1.5">
+              <div
+                key={m.id}
+                className="text-[11px] font-mono text-destructive bg-destructive/10 border border-destructive/40 rounded px-2 py-1.5"
+              >
                 🛡️ {m.content}
               </div>
             );
@@ -76,7 +92,9 @@ export default function OrderChatRoom({ roomId }: { roomId: string }) {
           const mine = m.sender_id === user?.id;
           return (
             <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[80%] px-2.5 py-1.5 rounded text-xs ${mine ? "bg-primary/20 text-primary" : "bg-secondary/60 text-foreground"}`}>
+              <div
+                className={`max-w-[80%] px-2.5 py-1.5 rounded text-xs ${mine ? "bg-primary/20 text-primary" : "bg-secondary/60 text-foreground"}`}
+              >
                 {m.content}
               </div>
             </div>
@@ -90,7 +108,11 @@ export default function OrderChatRoom({ roomId }: { roomId: string }) {
           placeholder="Mesaj yaz..."
           className="flex-1 bg-background border border-border rounded px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-destructive"
         />
-        <button type="submit" disabled={sending || !input.trim()} className="px-3 py-1.5 rounded bg-destructive text-destructive-foreground disabled:opacity-50">
+        <button
+          type="submit"
+          disabled={sending || !input.trim()}
+          className="px-3 py-1.5 rounded bg-destructive text-destructive-foreground disabled:opacity-50"
+        >
           <Send className="w-3.5 h-3.5" />
         </button>
       </form>
