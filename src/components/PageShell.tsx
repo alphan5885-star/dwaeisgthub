@@ -4,6 +4,7 @@ import SessionTimerBadge from "./SessionTimerBadge";
 import KizilyurekAssistant from "./KizilyurekAssistant";
 import CommandPalette from "./CommandPalette";
 import NewsTicker from "./NewsTicker";
+import QuickTools from "./QuickTools";
 import { useBackground } from "@/lib/backgroundContext";
 import { useCustomization } from "@/lib/customizationContext";
 
@@ -48,6 +49,7 @@ export default function PageShell({ children }: { children: ReactNode }) {
         onOpenChange={setAssistantOpen}
         hideFab
       />
+      <QuickTools />
       <CommandPalette />
     </div>
   );
