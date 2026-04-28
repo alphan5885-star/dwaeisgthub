@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "description": "Known scan findings baseline. The build fails when supplied scan results contain any scanner/internal_id pair not listed here.",
+  "allowedFindings": [
+    {
+      "scannerName": "agent_security",
+      "internalId": "profiles_pin_hash"
+    },
+    {
+      "scannerName": "agent_security",
+      "internalId": "rpc_payment_confirm"
+    },
+    {
+      "scannerName": "agent_security",
+      "internalId": "admin_route_client_guard"
+    },
+    {
+      "scannerName": "agent_security",
+      "internalId": "lockout_dos"
+    },
+    {
+      "scannerName": "supabase",
+      "internalId": "SUPA_authenticated_security_definer_function_executable"
+    },
+    {
+      "scannerName": "supabase",
+      "internalId": "SUPA_anon_security_definer_function_executable"
+    },
+    {
+      "scannerName": "supabase_lov",
+      "internalId": "user_roles_privilege_escalation"
+    }
+  ]
+}
