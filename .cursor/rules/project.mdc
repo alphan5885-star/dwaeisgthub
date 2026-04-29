@@ -1,0 +1,18 @@
+---
+description: Project conventions for AI coding agents
+alwaysApply: true
+---
+
+# Project Conventions
+
+- Use npm commands by default: `npm install`, `npm run dev`, `npm run build`.
+- Prefer `npm run dev:light` for fast AI-assisted iteration.
+- Use `npm run dev:host` in remote preview environments.
+- Use `npm run dev:light:host` in remote preview environments when speed matters.
+- Run `npm run doctor` before deeper debugging in a fresh environment.
+- Use `npm run routes` and `npm run map` to orient yourself before broad edits.
+- Use `npm run clean` only for generated build/cache output.
+- Do not manually edit `src/routeTree.gen.ts` unless regenerating route metadata is impossible.
+- Keep environment values in `.env`; use `.env.example` as the template.
+- Prefer existing components in `src/components/ui` and helpers in `src/lib`.
+- Main files: `src/routes/__root.tsx`, `src/pages/Login.tsx`, `src/lib/authContext.tsx`.

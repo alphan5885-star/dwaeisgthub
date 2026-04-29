@@ -23,10 +23,21 @@ const SESSION_OPTIONS: { label: string; min: number }[] = [
   { label: "2 sa", min: 120 },
 ];
 
+const toAuthEmail = (name: string) => {
+  const username = name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^[-.]+|[-.]+$/g, "");
+  return `${username || "user"}@local.aeigsthub`;
+};
+
 export default function Login() {
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [role, setRole] = useState<Role>("buyer");
   const [withdrawPin, setWithdrawPin] = useState("");
@@ -45,6 +56,15 @@ export default function Login() {
   });
   const { login, signup, mfaChallenge, verifyMfa } = useAuth();
   const { startSession } = useSessionTimer();
+
+  const passwordRules = {
+    length: password.length >= 8,
+    letter: /[a-zA-Z]/.test(password),
+    number: /\d/.test(password),
+    match: password.length > 0 && password === passwordConfirm,
+  };
+  const passwordReady =
+    passwordRules.length && passwordRules.letter && passwordRules.number && passwordRules.match;
 
   useEffect(() => {
     if (mode !== "login" || !email || !email.includes("@")) {
@@ -78,7 +98,17 @@ export default function Login() {
         startSession(sessionMin);
       }
     } else {
-      if (password.length < 6) {
+      if (displayName.trim().length < 3) {
+        setError("Kullanici adi en az 3 karakter olmali.");
+        setSubmitting(false);
+        return;
+      }
+      if (!passwordReady) {
+        setError("Sifre asamalarini tamamla.");
+        setSubmitting(false);
+        return;
+      }
+      if (false && !passwordReady) {
         setError("Şifre en az 6 karakter olmalı.");
         setSubmitting(false);
         return;
@@ -89,9 +119,9 @@ export default function Login() {
         return;
       }
       const err = await signup(
-        email,
+        toAuthEmail(displayName),
         password,
-        displayName || email,
+        displayName.trim(),
         role,
         withdrawPin || undefined,
         pgpKey || undefined,
@@ -102,7 +132,9 @@ export default function Login() {
       } else {
         setSuccess("Kayıt başarılı! Giriş yapabilirsiniz.");
         setMode("login");
+        setEmail(displayName.trim());
         setPassword("");
+        setPasswordConfirm("");
         setWithdrawPin("");
         setPgpKey("");
         setSubmitting(false);
@@ -245,6 +277,8 @@ export default function Login() {
                 setMode(m);
                 setError("");
                 setSuccess("");
+                setPassword("");
+                setPasswordConfirm("");
               }}
               className={`flex-1 py-2 text-xs font-mono rounded-md transition-all relative z-10 ${mode === m ? "bg-primary text-primary-foreground neon-glow-btn font-bold" : "text-muted-foreground hover:text-foreground"}`}
             >
@@ -298,6 +332,9 @@ export default function Login() {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     className="w-full bg-secondary border border-border rounded px-3 py-2.5 text-sm text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    required={mode === "signup"}
+                    minLength={3}
+                    autoComplete="username"
                     placeholder="Kullanıcı adınız"
                   />
                 </div>
@@ -317,18 +354,21 @@ export default function Login() {
             )}
           </AnimatePresence>
 
-          <div>
-            <label className="text-xs text-muted-foreground font-mono mb-1 block">E-POSTA</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-secondary border border-border rounded px-3 py-2.5 text-sm text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/50"
-              placeholder="ornek@email.com"
-              required
-              autoComplete="email"
-            />
-          </div>
+          {mode === "login" && (
+            <div>
+              <label className="text-xs text-muted-foreground font-mono mb-1 block">
+                KULLANICI ADI
+              </label>
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-secondary border border-border rounded px-3 py-2.5 text-sm text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/50"
+                placeholder="kullanici-adiniz"
+                required
+                autoComplete="username"
+              />
+            </div>
+          )}
 
           <div>
             <label className="text-xs text-muted-foreground font-mono mb-1 block">ŞİFRE</label>
@@ -339,7 +379,7 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-secondary border border-border rounded px-3 py-2.5 pr-10 text-sm text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/50"
                 required
-                minLength={6}
+                minLength={mode === "signup" ? 8 : 6}
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
               />
               <button
@@ -351,6 +391,39 @@ export default function Login() {
               </button>
             </div>
           </div>
+
+          {mode === "signup" && (
+            <div className="space-y-3 rounded border border-border bg-secondary/30 p-3">
+              <div>
+                <label className="text-xs text-muted-foreground font-mono mb-1 block">
+                  SIFRE TEKRAR
+                </label>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={passwordConfirm}
+                  onChange={(e) => setPasswordConfirm(e.target.value)}
+                  className="w-full bg-secondary border border-border rounded px-3 py-2.5 text-sm text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
+                <span className={passwordRules.length ? "text-green-500" : "text-muted-foreground"}>
+                  1. En az 8 karakter
+                </span>
+                <span className={passwordRules.letter ? "text-green-500" : "text-muted-foreground"}>
+                  2. Harf icersin
+                </span>
+                <span className={passwordRules.number ? "text-green-500" : "text-muted-foreground"}>
+                  3. Rakam icersin
+                </span>
+                <span className={passwordRules.match ? "text-green-500" : "text-muted-foreground"}>
+                  4. Sifreler eslessin
+                </span>
+              </div>
+            </div>
+          )}
 
           <AnimatePresence mode="wait">
             {mode === "signup" && (
@@ -421,7 +494,7 @@ export default function Login() {
 
           <motion.button
             type="submit"
-            disabled={submitting || !captchaOk}
+            disabled={submitting || !captchaOk || (mode === "signup" && !passwordReady)}
             whileTap={{ scale: 0.98 }}
             className="w-full bg-primary text-primary-foreground py-3 rounded font-mono text-sm font-bold hover:opacity-90 transition-all neon-glow-btn disabled:opacity-50 flex items-center justify-center gap-2"
           >

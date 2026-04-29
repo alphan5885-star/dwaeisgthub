@@ -4,6 +4,16 @@ import type { User } from "@supabase/supabase-js";
 
 type Role = "admin" | "vendor" | "buyer" | null;
 
+const toAuthEmail = (identifier: string) => {
+  const normalized = identifier.trim().toLowerCase();
+  if (normalized.includes("@")) return normalized;
+  const username = normalized
+    .replace(/[^a-z0-9._-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^[-.]+|[-.]+$/g, "");
+  return `${username || "user"}@local.aeigsthub`;
+};
+
 const authTimeout = <T,>(promise: Promise<T>, fallback: T, ms = 3000) =>
   Promise.race([
     promise,
@@ -100,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string): Promise<string | null> => {
-    const normalized = email.trim().toLowerCase();
+    const normalized = toAuthEmail(email);
 
     // 1) Check account lockout BEFORE attempting auth
     const { data: lockData } = await supabase.rpc("is_account_locked", { _email: normalized });
@@ -181,7 +191,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     if (error) return error.message;
-    if (!data.session)
+    if (!data.session) return "Kayit olusturuldu. Giris yapabilirsiniz.";
+    if (false && !data.session)
       return "E-posta doğrulama bağlantısı gönderildi. Onayladıktan sonra giriş yapabilirsiniz.";
 
     const { error: roleError } = await supabase.rpc("assign_role_on_signup", {

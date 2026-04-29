@@ -18,6 +18,8 @@ import TorWarningBanner from "@/components/TorWarningBanner";
 
 import NotFound from "@/pages/NotFound";
 
+const lightDev = import.meta.env.DEV && import.meta.env.VITE_LIGHT_DEV === "true";
+
 export const Route = createRootRoute({
   head: () => ({
     meta: [
@@ -30,7 +32,7 @@ export const Route = createRootRoute({
       {
         httpEquiv: "Content-Security-Policy",
         content:
-          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://ai.gateway.lovable.dev; frame-src https://www.youtube.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests",
+          "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://ai.gateway.lovable.dev; frame-src https://www.youtube.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests",
       },
       { httpEquiv: "X-Frame-Options", content: "DENY" },
       { httpEquiv: "X-Content-Type-Options", content: "nosniff" },
@@ -93,29 +95,31 @@ function AuthGuard({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const [queryClient] = useState(() => new QueryClient());
+  const app = (
+    <SessionTimerProvider>
+      <I18nProvider>
+        <CustomizationProvider>
+          <BackgroundProvider>
+            <StealthProvider>
+              {!lightDev && <TorWarningBanner />}
+              <AuthGuard>
+                <Outlet />
+              </AuthGuard>
+              {!lightDev && <SecurityHud />}
+              {!lightDev && <BackgroundMusic />}
+            </StealthProvider>
+          </BackgroundProvider>
+        </CustomizationProvider>
+      </I18nProvider>
+    </SessionTimerProvider>
+  );
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Sonner />
         <AuthProvider>
-          <SecurityProvider>
-            <SessionTimerProvider>
-              <I18nProvider>
-                <CustomizationProvider>
-                  <BackgroundProvider>
-                    <StealthProvider>
-                      <TorWarningBanner />
-                      <AuthGuard>
-                        <Outlet />
-                      </AuthGuard>
-                      <SecurityHud />
-                      <BackgroundMusic />
-                    </StealthProvider>
-                  </BackgroundProvider>
-                </CustomizationProvider>
-              </I18nProvider>
-            </SessionTimerProvider>
-          </SecurityProvider>
+          {lightDev ? app : <SecurityProvider>{app}</SecurityProvider>}
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
